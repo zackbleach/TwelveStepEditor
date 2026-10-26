@@ -91,7 +91,7 @@ struct PresetsView: View {
                     add { $0.newPreset(name: $0.uniqueName(for: name.isEmpty ? "New Preset" : name)) }
                 }
             } message: {
-                Text("The 12 Step's display name is suggested from it; you can change both later.")
+                Text("The 4 letters shown on the 12 Step's display are filled in from this name. You can change either later.")
             }
             .confirmationDialog("Delete “\(deleting?.name ?? "")”?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                                 titleVisibility: .visible) {
