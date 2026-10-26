@@ -61,16 +61,15 @@ final class AppModel {
         }
     }
 
-    /// Sends the saved global settings. Returns a message for the user.
-    func sendSettings() async -> String {
-        guard let contents = presets.contents else { return "No settings loaded." }
-        do {
-            _ = try await session.upload(PresetImageFormatter.settingsMessage(for: contents.settings))
-            return "Sent the global settings to the 12 Step."
-        } catch {
-            return "Not sent: \(error.localizedDescription)"
+    /// Sends `settings` as soon as the device is free (an upload in progress is waited out, as
+    /// the desktop's `slotSendSettings` retries). Used for live updates; throws on failure.
+    func sendSettingsWhenFree(_ settings: GlobalSettings) async throws {
+        while session.isUploading || session.isQuerying {
+            try await Task.sleep(for: .milliseconds(100))
         }
+        _ = try await session.upload(PresetImageFormatter.settingsMessage(for: settings))
     }
+
 
     /// True when the connected device identified itself as a 12 Step2 (CV outputs, backlight).
     var isTwelveStep2: Bool {

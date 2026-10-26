@@ -237,7 +237,9 @@ public final class DiagnosticsSession {
         }
         let elapsed = Int(Date().timeIntervalSince(started) * 1000)
         log.append(.info, kind: .configuration,
-                   summary: "\(kind.title) sent in \(elapsed) ms. Check the 12 Step display for the received-preset count.")
+                   summary: kind == .settings
+                       ? "\(kind.title) sent in \(elapsed) ms."
+                       : "\(kind.title) sent in \(elapsed) ms. Check the 12 Step display for the received-preset count.")
         return kind
     }
 

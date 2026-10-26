@@ -2,9 +2,17 @@ import SwiftUI
 import TwelveStepKit
 
 /// Global settings (the desktop's Settings tab) and where the preset files live.
+///
+/// Like the desktop editor, every change is saved straight away and, with Live updates on, sent to
+/// the 12 Step a moment after you stop moving the control (settings.cpp `slotValueChanged` →
+/// `MainWindow::slotSendSettings`). Only the settings packet is sent; presets and setlist are not.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var draft: GlobalSettings?
+    @AppStorage("liveSettingsUpdates") private var liveUpdates = true
+    @State private var saveTask: Task<Void, Never>?
+    @State private var sendTask: Task<Void, Never>?
+    @State private var liveStatus: LiveStatus = .idle
     @State private var choosingFolder = false
     @State private var settingUpSync = false
     @AppStorage("macSyncCardDismissed") private var syncCardDismissed = false
@@ -24,14 +32,24 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .toolbar {
-                if isDirty {
-                    ToolbarItem(placement: .cancellationAction) { Button("Revert") { draft = saved } }
-                    ToolbarItem(placement: .confirmationAction) { Button("Save") { save() } }
+            .onAppear {
+                if draft == nil { draft = saved }
+                #if DEBUG
+                // -liveSettingsTest: three quick backlight changes; expect one save and one send.
+                if ProcessInfo.processInfo.arguments.contains("-liveSettingsTest") {
+                    Task {
+                        try? await Task.sleep(for: .seconds(2))
+                        for level in [5, 12, 20] { draft?.backlightBrightness = level; try? await Task.sleep(for: .milliseconds(40)) }
+                    }
                 }
+                #endif
             }
-            .onAppear { if draft == nil { draft = saved } }
-            .onChange(of: saved) { _, latest in if !isDirty { draft = latest } }
+            .onChange(of: saved) { _, latest in if !isDirty && saveTask == nil { draft = latest } }
+            .onChange(of: draft) { old, new in
+                // Ignore the initial load and reloads from disk; react to edits.
+                guard let old, let new, old != new, new != saved else { return }
+                settingsChanged(new)
+            }
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { model.presets.useFolder(folder); draft = model.presets.contents?.settings }
             }
@@ -126,38 +144,96 @@ struct SettingsView: View {
         }
 
         Section {
-            Button {
-                Task { await saveAndSend() }
-            } label: {
-                HStack {
-                    Label(isDirty ? "Save and send to 12 Step" : "Send settings to 12 Step", systemImage: "square.and.arrow.up")
-                    if sending { Spacer(); ProgressView() }
+            Toggle(isOn: $liveUpdates) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Live updates")
+                    liveStatusText
                 }
             }
-            .disabled(!model.canSend || sending)
+            if !liveUpdates {
+                Button {
+                    Task { await send() }
+                } label: {
+                    HStack {
+                        Label("Send settings to 12 Step", systemImage: "square.and.arrow.up")
+                        if sending { Spacer(); ProgressView() }
+                    }
+                }
+                .disabled(!model.canSend || sending)
+            }
+        } header: {
+            Text("12 Step")
         } footer: {
-            Text(model.session.selectedDestination == nil ? "Connect the 12 Step to send." : "Sends only the global settings; presets are unchanged.")
+            Text(liveUpdates
+                 ? "Changes are saved and sent to the connected 12 Step as you make them, like the desktop editor. Only these global settings are sent; presets and the setlist are not."
+                 : "Changes are saved here only. Tap Send to update the 12 Step. Only these global settings are sent; presets and the setlist are not.")
+        }
+    }
+
+    @ViewBuilder private var liveStatusText: some View {
+        switch liveStatus {
+        case _ where model.session.selectedDestination == nil:
+            Text("12 Step not connected").font(.caption).foregroundStyle(.secondary)
+        case .idle:
+            Text(liveUpdates ? "Ready" : "Off").font(.caption).foregroundStyle(.secondary)
+        case .sending:
+            Text("Sending…").font(.caption).foregroundStyle(.secondary)
+        case .sent:
+            Label("Sent to 12 Step", systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.green)
+        case .failed(let reason):
+            Label("Not sent: \(reason)", systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
         }
     }
 
     // MARK: Actions
 
-    @discardableResult
-    private func save() -> Bool {
-        guard let draft else { return false }
-        do {
-            try model.presets.update { $0.settings = draft }
-            return true
-        } catch {
-            message = error.localizedDescription
-            return false
+    enum LiveStatus: Equatable { case idle, sending, sent, failed(String) }
+
+    /// Saves (in the background, after a short pause so a slider drag writes once) and, with live
+    /// updates on and the 12 Step connected, sends the new settings.
+    private func settingsChanged(_ settings: GlobalSettings) {
+        saveTask?.cancel()
+        saveTask = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            do {
+                try model.presets.updateInBackground({ $0.settings = settings }) { error in
+                    message = "Couldn't save settings: \(error.localizedDescription) The latest files have been reloaded."
+                    draft = model.presets.contents?.settings
+                }
+            } catch {
+                message = error.localizedDescription
+            }
+            saveTask = nil
+        }
+
+        guard liveUpdates, model.session.selectedDestination != nil else { return }
+        sendTask?.cancel()
+        sendTask = Task {
+            // Wait for the control to settle (the desktop waits ~10 ms; a touch slider needs longer).
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            liveStatus = .sending
+            do {
+                try await model.sendSettingsWhenFree(settings)
+                if !Task.isCancelled { liveStatus = .sent }
+            } catch is CancellationError {
+            } catch {
+                liveStatus = .failed(error.localizedDescription)
+            }
         }
     }
 
-    private func saveAndSend() async {
-        if isDirty, !save() { return }
+    /// Manual send (live updates off): sends what's on screen, which may be a moment ahead of the file.
+    private func send() async {
+        guard let draft else { return }
         sending = true
-        message = await model.sendSettings()
+        do {
+            try await model.sendSettingsWhenFree(draft)
+            message = "Sent the global settings to the 12 Step."
+        } catch {
+            message = "Not sent: \(error.localizedDescription)"
+        }
         sending = false
     }
 }
