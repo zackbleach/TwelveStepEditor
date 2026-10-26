@@ -64,14 +64,9 @@ struct PresetEditorView: View {
         return Form {
             Section {
                 LabeledContent("Name") {
-                    HStack(spacing: 6) {
-                        TextField("Preset name", text: preset.nameValue)
-                            .multilineTextAlignment(.trailing)
-                            .submitLabel(.done)
-                        Image(systemName: "pencil")
-                            .foregroundStyle(.secondary)
-                            .accessibilityHidden(true)
-                    }
+                    TextField("Preset name", text: preset.nameValue)
+                        .multilineTextAlignment(.trailing)
+                        .submitLabel(.done)
                 }
                 DisplayNameEditor(characters: preset.displayCharacters)
             } footer: {
@@ -430,12 +425,19 @@ private struct ModlineRow: View {
 
 private struct CVSection: View {
     @Binding var preset: Preset
+    /// Open by default when a 12 Step2 (the model with CV outputs) is connected; always collapsible.
     let expanded: Bool
-    @State private var showing = false
+    @State private var showing: Bool
+
+    init(preset: Binding<Preset>, expanded: Bool) {
+        _preset = preset
+        self.expanded = expanded
+        _showing = State(initialValue: expanded)
+    }
 
     var body: some View {
         Section {
-            DisclosureGroup("CV outputs (12 Step2)", isExpanded: Binding(get: { showing || expanded }, set: { showing = $0 })) {
+            DisclosureGroup("CV outputs (12 Step2)", isExpanded: $showing) {
                 ForEach(Preset.CVOutput.allCases, id: \.self) { output in
                     Text("CV Out \(output.rawValue)").font(.subheadline.weight(.semibold))
                     OptionPicker(title: "Control surface",
