@@ -105,7 +105,7 @@ struct PresetEditorView: View {
 
             ModlinesSection(preset: preset)
 
-            CVSection(preset: preset, expanded: model.isTwelveStep2)
+            CVSection(preset: preset)
 
             if inSetlist {
                 Section {
@@ -425,15 +425,8 @@ private struct ModlineRow: View {
 
 private struct CVSection: View {
     @Binding var preset: Preset
-    /// Open by default when a 12 Step2 (the model with CV outputs) is connected; always collapsible.
-    let expanded: Bool
-    @State private var showing: Bool
-
-    init(preset: Binding<Preset>, expanded: Bool) {
-        _preset = preset
-        self.expanded = expanded
-        _showing = State(initialValue: expanded)
-    }
+    /// Collapsed by default; tap to show the CV output settings.
+    @State private var showing = false
 
     var body: some View {
         Section {
