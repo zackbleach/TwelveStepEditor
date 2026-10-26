@@ -35,11 +35,27 @@ struct OffStepper: View {
     @Binding var value: Int
     let range: ClosedRange<Int>
     var offValue: Int? = nil
+    var help: String? = nil
 
     var body: some View {
         Stepper(value: $value, in: range) {
-            LabeledContent(title, value: value == offValue ? "Off" : String(value))
+            LabeledContent { Text(value == offValue ? "Off" : String(value)) } label: { HelpTitle(title, help) }
         }
+    }
+}
+
+/// A setting's name; with help text, touch and hold it for an explanation.
+struct HelpTitle: View {
+    let title: String
+    let help: String?
+
+    init(_ title: String, _ help: String? = nil) {
+        self.title = title
+        self.help = help
+    }
+
+    var body: some View {
+        if let help { Text(title).holdForHelp(title, help) } else { Text(title) }
     }
 }
 
@@ -48,11 +64,18 @@ struct OptionPicker: View {
     let title: String
     @Binding var selection: String
     let options: [String]
+    var help: String? = nil
 
     var body: some View {
-        Picker(title, selection: $selection) {
-            ForEach(options, id: \.self) { Text($0).tag($0) }
-            if !options.contains(selection) { Text(selection).tag(selection) }
+        // The name sits outside the menu so touch and hold reaches it rather than opening the menu.
+        HStack {
+            HelpTitle(title, help)
+            Spacer(minLength: 8)
+            Picker(title, selection: $selection) {
+                ForEach(options, id: \.self) { Text($0).tag($0) }
+                if !options.contains(selection) { Text(selection).tag(selection) }
+            }
+            .labelsHidden()
         }
     }
 }

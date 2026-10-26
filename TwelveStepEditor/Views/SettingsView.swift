@@ -103,47 +103,45 @@ struct SettingsView: View {
         Section {
             SliderRow(title: "Key sensitivity", value: settings.keySensitivitySlider, range: 1...500,
                       label: { "\(Double($0) / 5, specifier: "%g")%" }, reset: 100,
-                      help: "How loud a press plays. Higher means lighter presses reach full velocity.")
+                      help: "The overall sensitivity of the keys and Select button. Higher makes velocity, pressure and tilt values larger, and keys turn on with less force.")
             SliderRow(title: "On threshold", value: Binding(get: { settings.wrappedValue.onThreshold }, set: { value in
                 settings.wrappedValue.onThreshold = value
                 if settings.wrappedValue.offThreshold >= value { settings.wrappedValue.offThreshold = max(10, value - 1) }
             }), range: 15...64, label: { "\($0)" }, reset: nil,
-                      help: "How firmly a key must be pressed before its note starts. Lower is more sensitive.")
+                      help: "The pressure needed to turn a key on. Higher needs more pressure; lower makes keys more sensitive.")
             SliderRow(title: "Off threshold", value: Binding(get: { settings.wrappedValue.offThreshold }, set: { value in
                 settings.wrappedValue.offThreshold = value
                 if value >= settings.wrappedValue.onThreshold { settings.wrappedValue.onThreshold = min(64, value + 1) }
             }), range: 10...64, label: { "\($0)" }, reset: nil,
-                      help: "How far a key must be let go before its note stops. Always kept below the on threshold.")
+                      help: "The pressure below which a held key turns off. Lower makes a key easier to keep held; higher makes fast repeated notes easier. Always below the on threshold.")
             Button("Reset thresholds") {
                 settings.wrappedValue.onThreshold = 20
                 settings.wrappedValue.offThreshold = 15
             }
         } header: {
             Text("Keys")
-        } footer: {
-            Label("Touch and hold a setting's name to see what it does.", systemImage: "hand.tap")
         }
 
         Section("Select button") {
             SliderRow(title: "Hold time", value: settings.selectHoldTime, range: 1...127,
                       label: { "\(Double($0) * 0.05, specifier: "%.2f") s" }, reset: 10,
-                      help: "How long you hold the 12 Step's Select button before it counts as a hold rather than a tap.")
+                      help: "How long you hold the Select key before Select Mode starts, for changing presets and octaves. From 0.05 to 6 seconds.")
         }
 
         Section {
             SliderRow(title: "Backlight", value: settings.backlightBrightness, range: 0...29,
                       label: { "\(Int(Double($0) / 29 * 100))%" }, reset: nil,
-                      help: "Brightness of the key lights. 12 Step2 only; the original 12 Step is always at full brightness.")
+                      help: "Brightness of the key backlights. 12 Step2 only. It can also be set with CC 69 on the Change preset by MIDI channel.")
             HelpRow("Full volume on preset change",
-                    help: "When you switch presets, the 12 Step sends MIDI volume at maximum, so a level set by the previous preset doesn't carry over.") {
+                    help: "Sends CC 7 (volume) at 127 whenever you change preset.") {
                 Toggle("", isOn: settings.fullVolumeOnPresetChange).labelsHidden()
             }
             HelpRow("Full velocity",
-                    help: "Every note plays at full velocity (127), however hard you press.") {
+                    help: "Every note plays at full velocity (127), ignoring the velocity settings in your presets' modlines.") {
                 Toggle("", isOn: settings.velocityOverride).labelsHidden()
             }
             HelpRow("Change preset by MIDI",
-                    help: "Lets another device pick the 12 Step's preset: a program change received on this channel selects the preset with that number. Off ignores program changes.") {
+                    help: "The channel the 12 Step listens on for program changes: program change 23 loads the 23rd preset in the setlist. Backlight (CC 69) and display messages are received on this channel too. Off ignores them.") {
                 Picker("", selection: settings.programChangeChannel) {
                     ForEach(0..<16, id: \.self) { Text("Channel \($0 + 1)").tag($0) }
                     Text("Off").tag(16)
@@ -160,10 +158,8 @@ struct SettingsView: View {
     /// Settings are always sent live, like the desktop editor; this line shows what happened.
     @ViewBuilder private var liveStatusText: some View {
         switch liveStatus {
-        case _ where model.session.selectedDestination == nil:
-            Label("Changes are sent to the 12 Step as you make them. Not connected.", systemImage: "cable.connector.slash")
         case .idle:
-            Label("Changes are sent to the 12 Step as you make them.", systemImage: "arrow.up.circle")
+            EmptyView()
         case .sending:
             Label("Sending to the 12 Step…", systemImage: "arrow.up.circle")
         case .sent:

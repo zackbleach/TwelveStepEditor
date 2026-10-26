@@ -95,11 +95,21 @@ struct PresetEditorView: View {
             VoiceSection(title: "Voice B", voice: .b, preset: preset)
 
             Section("Behaviour") {
-                Picker("Note mode", selection: preset.noteMode) {
-                    ForEach(Preset.NoteMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                HStack {
+                    HelpTitle("Note mode", Help.noteMode)
+                    Spacer(minLength: 8)
+                    Picker("Note mode", selection: preset.noteMode) {
+                        ForEach(Preset.NoteMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .labelsHidden()
                 }
-                Picker("Key mode", selection: preset.keyMode) {
-                    ForEach(Preset.KeyMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                HStack {
+                    HelpTitle("Key mode", Help.keyMode)
+                    Spacer(minLength: 8)
+                    Picker("Key mode", selection: preset.keyMode) {
+                        ForEach(Preset.KeyMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .labelsHidden()
                 }
             }
 
@@ -297,22 +307,24 @@ private struct VoiceSection: View {
         let settings = Binding(get: { preset.voice(voice) }, set: { preset.setVoice($0, voice: voice) })
         Section {
             if voice == .a {
-                Stepper(value: settings.channel, in: 1...16) { LabeledContent("MIDI channel", value: "\(settings.wrappedValue.channel)") }
+                Stepper(value: settings.channel, in: 1...16) {
+                    LabeledContent { Text("\(settings.wrappedValue.channel)") } label: { HelpTitle("MIDI channel", Help.channelA) }
+                }
             } else {
-                OffStepper(title: "MIDI channel", value: settings.channel, range: 0...16, offValue: 0)
+                OffStepper(title: "MIDI channel", value: settings.channel, range: 0...16, offValue: 0, help: Help.channelB)
             }
             if voice == .a || settings.wrappedValue.channel != 0 {
-                OffStepper(title: "Program change", value: settings.programChange, range: -1...127, offValue: -1)
-                OffStepper(title: "Bank MSB", value: settings.bankMSB, range: -1...127, offValue: -1)
-                OffStepper(title: "Bank LSB", value: settings.bankLSB, range: -1...127, offValue: -1)
+                OffStepper(title: "Program change", value: settings.programChange, range: -1...127, offValue: -1, help: Help.programChange)
+                OffStepper(title: "Bank MSB", value: settings.bankMSB, range: -1...127, offValue: -1, help: Help.bankMSB)
+                OffStepper(title: "Bank LSB", value: settings.bankLSB, range: -1...127, offValue: -1, help: Help.bankLSB)
                 Stepper(value: settings.transpose, in: -12...12) {
-                    LabeledContent("Transpose", value: settings.wrappedValue.transpose > 0 ? "+\(settings.wrappedValue.transpose)" : "\(settings.wrappedValue.transpose)")
+                    LabeledContent {
+                        Text(settings.wrappedValue.transpose > 0 ? "+\(settings.wrappedValue.transpose)" : "\(settings.wrappedValue.transpose)")
+                    } label: { HelpTitle("Transpose", Help.transpose) }
                 }
             }
         } header: {
             Text(title)
-        } footer: {
-            if voice == .b { Text("Voice B is a second MIDI channel played by the same keys. Set its channel to Off to disable it.") }
         }
     }
 }
@@ -341,11 +353,8 @@ private struct ModlinesSection: View {
         } header: {
             Text("Expression (modlines)")
         } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Each modline turns key velocity, pressure, tilt, key number or the expression pedal into a MIDI message. Source A drives voice A, source B drives voice B.")
-                if preset.hasUnsentModlineSix {
-                    Text("This preset also has a 6th modline. The 12 Step Editor never sends it to the device, so it isn't shown here.")
-                }
+            if preset.hasUnsentModlineSix {
+                Text("This preset also has a 6th modline. The 12 Step Editor never sends it to the device, so it isn't shown here.")
             }
         }
     }
@@ -379,25 +388,33 @@ private struct ModlineRow: View {
         let voiceBOn = preset.voice(.b).channel != 0
         DisclosureGroup(isExpanded: $expanded) {
             if number > 1 {
-                OptionPicker(title: "Destination", selection: modline.destination, options: Modline.destinations)
+                OptionPicker(title: "Destination", selection: modline.destination, options: Modline.destinations, help: Help.destination)
                 if modline.wrappedValue.destination == "CC" {
-                    Stepper(value: modline.ccNumber, in: 0...127) { LabeledContent("CC number", value: "\(modline.wrappedValue.ccNumber)") }
+                    Stepper(value: modline.ccNumber, in: 0...127) {
+                        LabeledContent { Text("\(modline.wrappedValue.ccNumber)") } label: { HelpTitle("CC number", Help.ccNumber) }
+                    }
                 }
             }
-            OptionPicker(title: "Source A (voice A)", selection: modline.sourceA, options: Modline.sources)
+            OptionPicker(title: "Source A (voice A)", selection: modline.sourceA, options: Modline.sources, help: Help.source)
             if voiceBOn {
-                OptionPicker(title: "Source B (voice B)", selection: modline.sourceB, options: Modline.sources)
+                OptionPicker(title: "Source B (voice B)", selection: modline.sourceB, options: Modline.sources, help: Help.source)
             }
-            OptionPicker(title: "Curve", selection: modline.curve, options: Modline.curves)
-            LabeledContent("Gain") {
+            OptionPicker(title: "Curve", selection: modline.curve, options: Modline.curves, help: Help.curve)
+            LabeledContent {
                 TextField("Gain", value: modline.gain, format: .number.precision(.fractionLength(0...2)))
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.numbersAndPunctuation)
                     .frame(maxWidth: 90)
+            } label: { HelpTitle("Gain", Help.gain) }
+            Stepper(value: modline.offset, in: -999...999) {
+                LabeledContent { Text("\(modline.wrappedValue.offset)") } label: { HelpTitle("Offset", Help.offset) }
             }
-            Stepper(value: modline.offset, in: -999...999) { LabeledContent("Offset", value: "\(modline.wrappedValue.offset)") }
-            Stepper(value: modline.min, in: 0...127) { LabeledContent("Min", value: "\(modline.wrappedValue.min)") }
-            Stepper(value: modline.max, in: 0...127) { LabeledContent("Max", value: "\(modline.wrappedValue.max)") }
+            Stepper(value: modline.min, in: 0...127) {
+                LabeledContent { Text("\(modline.wrappedValue.min)") } label: { HelpTitle("Min", Help.minMax) }
+            }
+            Stepper(value: modline.max, in: 0...127) {
+                LabeledContent { Text("\(modline.wrappedValue.max)") } label: { HelpTitle("Max", Help.minMax) }
+            }
             if number > 1 {
                 Button("Remove", role: .destructive) { preset.setModline(.off, number) }
             }
@@ -435,15 +452,65 @@ private struct CVSection: View {
                     Text("CV Out \(output.rawValue)").font(.subheadline.weight(.semibold))
                     OptionPicker(title: "Control surface",
                                  selection: Binding(get: { preset.cvLocalMode(output) }, set: { preset.setCVLocalMode($0, output) }),
-                                 options: Preset.cvLocalModes)
+                                 options: Preset.cvLocalModes, help: Help.cvLocal)
                     OptionPicker(title: "USB",
                                  selection: Binding(get: { preset.cvUSBMode(output) }, set: { preset.setCVUSBMode($0, output) }),
-                                 options: Preset.cvUSBModes)
+                                 options: Preset.cvUSBModes, help: Help.cvUSB)
                     OptionPicker(title: "USB channel",
                                  selection: Binding(get: { preset.cvUSBChannel(output) }, set: { preset.setCVUSBChannel($0, output) }),
-                                 options: Preset.cvUSBChannels)
+                                 options: Preset.cvUSBChannels, help: Help.cvUSBChannel)
                 }
             }
         }
     }
+}
+
+// MARK: - Help text (from the 12 Step Editor manual v3.0.1 and the desktop editor's tooltips)
+
+private enum Help {
+    static let channelA = "The MIDI channel voice A sends on."
+    static let channelB = "Voice B plays the same keys on a second MIDI channel, with its own transpose, program change and modline sources, for example to layer two synths. Off turns it off."
+    static let programChange = "Sent whenever this preset is loaded, to switch your synth to a matching sound. Off sends nothing."
+    static let bankMSB = "A Bank Select (CC 0) sent whenever this preset is loaded. Off sends nothing."
+    static let bankLSB = "A Bank Select (CC 32) sent whenever this preset is loaded. Off sends nothing."
+    static let transpose = "Shifts every note this voice plays by up to 12 semitones. 3 moves everything up a minor third."
+    static let noteMode = """
+        Normal: notes play while a key is pressed.
+        Legato: notes keep playing after you let go, until another key is pressed.
+        Toggle: press a key to start its notes and again to stop them.
+        Hold: switch between Normal and Legato with the Select key.
+        """
+    static let keyMode = "Mono: one key at a time. Poly: several keys at once."
+    static let destination = "The MIDI message this modline sends: CC, pitch bend, channel pressure or poly aftertouch. Each can be used once per preset, except CC, which can be used twice."
+    static let ccNumber = "The Control Change number to send, such as 1 for the mod wheel or 11 for expression."
+    static let source = """
+        What drives the modline:
+        Velocity: how hard a key is hit.
+        Pressure: how hard a key is held; drops to 0 on release.
+        Tilt: pressure towards the top of the key versus the bottom; returns to 63 on release.
+        KeyNum: which key is played, numbered left to right.
+        Pedal: the expression pedal.
+        Inverted versions run the other way.
+        """
+    static let curve = "The response curve applied to the source: Linear, Sine, Cosine, Exponential, Logarithmic, or DeadZone (linear with a flat spot in the middle)."
+    static let gain = "Multiplies the source value. 1 leaves it unchanged; a negative number inverts it."
+    static let offset = "Adds to the source value after the gain. Use a negative number to subtract."
+    static let minMax = "Values below Min or above Max are clipped to them, not ignored. Setting both to 60 always sends 60."
+    static let cvLocal = """
+        What the 12 Step2's keys do to this CV out (only a key's first note counts):
+        Gate: 5 V while a key is pressed.
+        Pitch: 1 V/octave for the last key pressed.
+        Pressure or Tilt: 0–5 V from the active key.
+        Pedal: 0–5 V from the expression pedal.
+        Disabled: the keys don't control it.
+        """
+    static let cvUSB = """
+        What USB MIDI sent to the 12 Step2's CV Out port does to this CV out:
+        Gate: 5 V while any note is on.
+        Pitch: 1 V/octave for the last note.
+        Velocity: 0–5 V from the last note's velocity.
+        Bend / Mod: 0–5 V from pitch bend or the mod wheel (CC 1).
+        If both the keys and USB control a CV out, the most recent wins.
+        """
+    static let cvUSBChannel = "The USB MIDI channel this CV out listens on (1 or 2)."
 }

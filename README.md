@@ -53,7 +53,7 @@ TwelveStepEditor/
 └── LICENSES/MPL-2.0.txt
 ```
 
-The official editor source used as the reference is cloned at `../12step-reference`.
+The official editor source used as the reference is cloned at `../12step-reference`. The official user manual (help texts are based on v3.0.1) is at https://files.musekinetics.com/pub/products/12Step/editor/Manual/.
 
 ## Build
 
