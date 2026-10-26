@@ -16,6 +16,7 @@ struct DeviceView: View {
             Section {
                 NavigationLink { MonitorView() } label: { Label("MIDI monitor", systemImage: "waveform.path.ecg") }
                 NavigationLink { QueryView() } label: { Label("Diagnostic queries", systemImage: "arrow.left.arrow.right") }
+                NavigationLink { AboutView() } label: { Label("About", systemImage: "info.circle") }
             }
 
             Section {
@@ -48,11 +49,11 @@ struct DeviceView: View {
             }
 
             Section {
-                Toggle("Use simulated device", isOn: $model.useSimulator)
+                Toggle("Demo mode (simulated 12 Step)", isOn: $model.useSimulator)
             } header: {
-                Text("Developer")
+                Text("Demo")
             } footer: {
-                Text("The simulator returns invented placeholder replies for UI testing. Nothing it shows is evidence of real 12 Step behaviour.")
+                Text("Try the app without a 12 Step. The simulated device accepts sends and answers queries with invented placeholder replies; nothing it shows is real 12 Step behaviour.")
             }
         }
         .navigationTitle("Device")
@@ -91,7 +92,7 @@ struct EndpointRow: View {
     }
 
     private var subtitle: String {
-        var parts = [endpoint.direction == .source ? "Source (device → iPhone)" : "Destination (iPhone → device)"]
+        var parts = [endpoint.direction == .source ? "Source (12 Step → \(deviceName))" : "Destination (\(deviceName) → 12 Step)"]
         if let role { parts.append("role: \(role.rawValue)") }
         if let manufacturer = endpoint.manufacturer { parts.append(manufacturer) }
         return parts.joined(separator: " · ")

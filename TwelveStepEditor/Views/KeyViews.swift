@@ -29,6 +29,9 @@ struct KeyboardOverview: View {
             }
         }
         .frame(height: 156)
+        // A fixed-size picture of the hardware: cap its text so labels stay inside the keys.
+        // VoiceOver still reads each key's full notes.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .accessibilityElement(children: .contain)
     }
 
@@ -45,7 +48,8 @@ struct KeyboardOverview: View {
                     .lineLimit(1)
                     .multilineTextAlignment(.center)
                 if notes.count > 1 {
-                    Text("\(notes.count) notes").font(.system(size: 9)).foregroundStyle(.secondary)
+                    Text("\(notes.count) notes").font(.caption2).foregroundStyle(.secondary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
                 }
             }
             .padding(2)
@@ -83,7 +87,7 @@ struct KeyEditorSheet: View {
     @Binding var preset: Preset
     let key: Int
     @Environment(\.dismiss) private var dismiss
-    @State private var octave = 3
+    @State private var octave = 2
     @State private var originalNotes: [Int]?
 
     private var notes: [Int] { preset.notes(forKey: key) }
@@ -92,23 +96,25 @@ struct KeyEditorSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    if notes.isEmpty {
-                        Text("No notes — this key is silent.").foregroundStyle(.secondary)
-                    } else {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 8)], alignment: .leading, spacing: 8) {
-                            ForEach(notes.sorted(), id: \.self) { note in
-                                Button {
-                                    setNotes(notes.filter { $0 != note })
-                                } label: {
-                                    Label(NoteNames.name(note), systemImage: "xmark.circle.fill")
-                                        .labelStyle(ChipLabelStyle())
-                                        .frame(maxWidth: .infinity)
+                    Group {
+                        if notes.isEmpty {
+                            Text("No notes — this key is silent.").foregroundStyle(.secondary)
+                        } else {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 8)], alignment: .leading, spacing: 8) {
+                                ForEach(notes.sorted(), id: \.self) { note in
+                                    Button {
+                                        setNotes(notes.filter { $0 != note })
+                                    } label: {
+                                        Label(NoteNames.name(note), systemImage: "xmark.circle.fill")
+                                            .labelStyle(ChipLabelStyle())
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .accessibilityLabel("Remove \(NoteNames.name(note))")
                                 }
-                                .buttonStyle(.bordered)
-                                .accessibilityLabel("Remove \(NoteNames.name(note))")
                             }
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
                     }
                 } header: {
                     Text("Notes (\(notes.count) of \(Preset.notesPerKey))")
@@ -120,16 +126,16 @@ struct KeyEditorSheet: View {
 
                 Section {
                     HStack {
-                        Button { octave = max(-1, octave - 1) } label: { Image(systemName: "chevron.left") }
+                        Button { octave = max(NoteNames.octaveRange.lowerBound, octave - 1) } label: { Image(systemName: "chevron.left") }
                             .accessibilityLabel("Lower octave")
                         Spacer()
                         Text("C\(octave) – B\(octave + 1)").font(.subheadline.monospacedDigit())
                         Spacer()
-                        Button { octave = min(8, octave + 1) } label: { Image(systemName: "chevron.right") }
+                        Button { octave = min(NoteNames.octaveRange.upperBound - 1, octave + 1) } label: { Image(systemName: "chevron.right") }
                             .accessibilityLabel("Higher octave")
                     }
                     .buttonStyle(.borderless)
-                    MiniPiano(firstNote: (octave + 1) * 12, octaves: 2, selected: Set(notes),
+                    MiniPiano(firstNote: NoteNames.c(inOctave: octave), octaves: 2, selected: Set(notes),
                               highlight: NoteNames.naturalNote(forKey: key)) { toggle($0) }
                         .frame(height: 110)
                         .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
@@ -186,7 +192,8 @@ struct KeyEditorSheet: View {
             }
             .onAppear {
                 if originalNotes == nil { originalNotes = notes }
-                octave = max(-1, min(8, (notes.min() ?? NoteNames.naturalNote(forKey: key)) / 12 - 1))
+                octave = max(NoteNames.octaveRange.lowerBound, min(NoteNames.octaveRange.upperBound - 1,
+                                  NoteNames.octave(of: notes.min() ?? NoteNames.naturalNote(forKey: key))))
             }
         }
         .presentationDetents([.large])
@@ -295,7 +302,7 @@ struct MiniPiano: View {
                     .fill(isSelected ? Color.accentColor : (black ? Color.primary : Color(.systemBackground)))
                 RoundedRectangle(cornerRadius: 4).strokeBorder(Color(.separator))
                 if !black && note % 12 == 0 {
-                    Text(NoteNames.name(note)).font(.system(size: 9)).foregroundStyle(isSelected ? .white : .secondary).padding(.bottom, 3)
+                    Text(NoteNames.name(note)).font(.caption2).dynamicTypeSize(...DynamicTypeSize.large).foregroundStyle(isSelected ? .white : .secondary).padding(.bottom, 3)
                 }
                 if note == highlight && !isSelected {
                     Circle().fill(Color.accentColor.opacity(0.5)).frame(width: 6, height: 6).padding(.bottom, black ? 4 : 16)
@@ -328,7 +335,7 @@ struct FillKeysSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Stepper(value: $pattern.octave, in: -1...8) {
+                    Stepper(value: $pattern.octave, in: NoteNames.octaveRange.lowerBound...(NoteNames.octaveRange.upperBound - 1)) {
                         LabeledContent("Key 1 plays", value: "C\(pattern.octave)")
                     }
                 } footer: {
@@ -385,7 +392,7 @@ struct FillKeysSheet: View {
             }
             .onAppear {
                 // Start from the octave key 1 currently plays in.
-                if let first = preset.notes(forKey: 1).min() { pattern.octave = max(-1, min(8, first / 12 - 1)) }
+                if let first = preset.notes(forKey: 1).min() { pattern.octave = max(NoteNames.octaveRange.lowerBound, min(NoteNames.octaveRange.upperBound - 1, NoteNames.octave(of: first))) }
                 #if DEBUG
                 let options = model.launchRoute.fillOptions
                 if let layout = KeyPattern.Layout.allCases.first(where: { "\($0)" == options["-fillLayout"] }) { pattern.layout = layout }
@@ -397,3 +404,4 @@ struct FillKeysSheet: View {
         }
     }
 }
+

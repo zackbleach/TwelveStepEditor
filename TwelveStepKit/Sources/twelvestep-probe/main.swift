@@ -22,15 +22,9 @@ func runProbe() async -> Int32 {
     let commandName = option("--query") ?? "identity"
     let destinationName = option("--dest")
     let monitorSeconds = option("--monitor").flatMap(Double.init) ?? 0
-    let commands: [String: SafeCommand] = ["identity": .identityRequest, "cv": .cvCalibrationRequest, "legacy": .legacyFirmwareQuery,
-                                           "preset-experimental": .presetRequestProbe]
+    let commands: [String: SafeCommand] = ["identity": .identityRequest, "cv": .cvCalibrationRequest, "legacy": .legacyFirmwareQuery]
     guard let command = commands[commandName] else {
-        print("Unknown query '\(commandName)'. Use identity, cv, legacy or preset-experimental.")
-        return 2
-    }
-    if command.isExperimental && !arguments.contains("--i-have-a-backup") {
-        print("'\(commandName)' is experimental and its effect on the device is unknown.")
-        print("Back up your presets in the desktop editor first, then add --i-have-a-backup.")
+        print("Unknown query '\(commandName)'. Use identity, cv or legacy.")
         return 2
     }
 

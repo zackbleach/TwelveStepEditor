@@ -2,20 +2,22 @@
 
 A native iOS editor for the Muse Kinetics **12 Step** MIDI foot controller, over USB-C.
 
-**Current state: Phase 7, first full editor (0.5.0).** It covers everything the desktop 12 Step Editor does to presets, the setlist and global settings, with a redesigned way to assign notes to keys (see `DESIGN.md`). Setlist and settings are sent to the 12 Step over USB-C, byte-identical to the desktop editor. Firmware update and the calibration windows aren't included.
+**Current state: preparing the first release (0.6.0).** The release checklist is `TODO.org`. It covers everything the desktop 12 Step Editor does to presets, the setlist and global settings, with a redesigned way to assign notes to keys (see `DESIGN.md`). Setlist and settings are sent to the 12 Step over USB-C, byte-identical to the desktop editor. Firmware update and the calibration windows aren't included.
 
 ## Sharing presets with the desktop editor (optional)
 
 The phone app works on its own, starting from the factory presets. To edit the same presets on a Mac and the phone:
 
-1. Quit the 12 Step Editor, then double-click `Tools/mac-sync/Enable iCloud Sync.command`. It:
-   - backs up the editor's folder to `~/Documents/12 Step Editor Backups/`;
-   - copies the files to `iCloud Drive/12 Step Editor/`;
-   - points the editor there.
+1. Build and open **12 Step Sync** (`Tools/sync-setup/build-app.sh` makes `Tools/sync-setup/dist/12 Step Sync.app`).
+   - It checks that the desktop editor is closed and iCloud Drive is on.
+   - It backs up the editor's folder to `~/Documents/12 Step Editor Backups/`.
+   - It copies the four preset files to `iCloud Drive/12 Step Editor/`.
+   - It points the editor's `PRESET_DIR` preference there.
+   - **Turn Off Sync** reverses it, bringing the latest presets back to the Mac.
+   - The desktop editor app itself is never modified.
+2. In the iOS app: **Settings › Choose folder… › iCloud Drive › 12 Step Editor**.
 
-   The editor app itself isn't modified. `Disable iCloud Sync.command` undoes it.
-2. In Finder, right-click `iCloud Drive/12 Step Editor` and choose **Keep Downloaded**.
-3. In the app, go to Library → **Choose folder…** → iCloud Drive → **12 Step Editor**.
+The older Terminal scripts in `Tools/mac-sync/` do the same steps.
 
 **Rules:**
 - Quit the desktop editor while editing on the phone. It doesn't notice outside changes and would overwrite them when it saves. The app refuses to save over a file that changed since it was loaded.
@@ -27,8 +29,8 @@ This doesn't need a paid Apple developer account. The app uses the Files picker,
 
 ```
 TwelveStepEditor/
-├── TwelveStepDiagnostics.xcodeproj   iOS app project (Xcode 16+)
-├── TwelveStepDiagnostics/            SwiftUI app: App entry, AppModel, Views/, Assets
+├── TwelveStepEditor.xcodeproj   iOS app project (Xcode 16+)
+├── TwelveStepEditor/            SwiftUI app: App entry, AppModel, Views/, Assets
 ├── TwelveStepKit/                    Swift package, no UI
 │   ├── Sources/TwelveStepKit/
 │   │   ├── MIDI/         MIDITransport protocol, CoreMIDITransport, MockMIDITransport, UMP codec
@@ -40,11 +42,14 @@ TwelveStepEditor/
 │   └── Tests/            Swift Testing suite (golden vectors from the official editor)
 ├── Tools/
 │   ├── golden-harness/   builds the official C++ formatter to produce golden upload bytes
-│   └── mac-sync/         Enable / Disable iCloud Sync scripts for the desktop editor
+│   ├── sync-setup/       "12 Step Sync" Mac app: turns iCloud sharing on/off for the desktop editor
+│   └── mac-sync/         the same as Terminal scripts (older)
 ├── PROTOCOL.md   protocol findings with source references
 ├── FEASIBILITY.md
 ├── TESTING.md    install + physical test instructions
-├── PROGRESS.md   phase status and next steps
+├── PROGRESS.md   phase status and session log
+├── TODO.org      release checklist and backlog (org-mode)
+├── PRIVACY.md    privacy policy (the app collects no data)
 └── LICENSES/MPL-2.0.txt
 ```
 
@@ -52,14 +57,14 @@ The official editor source used as the reference is cloned at `../12step-referen
 
 ## Build
 
-- **iOS app:** open `TwelveStepDiagnostics.xcodeproj`, choose your Team under Signing & Capabilities, select your iPhone, then ⌘R. See `TESTING.md` for the full steps.
+- **iOS app:** open `TwelveStepEditor.xcodeproj`, choose your Team under Signing & Capabilities, select your iPhone, then ⌘R. See `TESTING.md` for the full steps.
 - **Command-line check:**
   ```sh
-  xcodebuild -project TwelveStepDiagnostics.xcodeproj -scheme TwelveStepDiagnostics \
+  xcodebuild -project TwelveStepEditor.xcodeproj -scheme TwelveStepEditor \
     -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
   ```
 - **Tests (macOS host):** `cd TwelveStepKit && swift test`
-- **Simulated device:** use the "Use simulated device" switch on the Device tab, or the `-simulate` launch argument. Simulated replies are invented placeholders.
+- **Demo mode (simulated device):** use the "Demo mode" switch on the Device tab, or the `-simulate` launch argument. Simulated replies are invented placeholders.
 
 Requirements: Xcode 16 or later, and iOS 17 or later (USB-C iPhones ship with iOS 17+).
 

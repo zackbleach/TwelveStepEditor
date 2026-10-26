@@ -273,7 +273,7 @@ public final class DiagnosticsSession {
         defer { isQuerying = false }
 
         let waiterID = UUID()
-        let timeout = command.timeout ?? queryTimeout
+        let timeout = queryTimeout
         var sendError: Error?
 
         let (reply, others) = await withCheckedContinuation { continuation in
@@ -282,7 +282,7 @@ public final class DiagnosticsSession {
             do {
                 try transport.send(bytes, to: destination.id)
                 log.append(.sent, bytes: bytes, endpointName: destination.displayName,
-                           kind: .configuration, summary: command.isExperimental ? "\(command.title): EXPERIMENTAL" : "\(command.title) (read-only)")
+                           kind: .configuration, summary: "\(command.title) (read-only)")
                 Task { [weak self] in
                     try? await Task.sleep(for: .seconds(timeout))
                     self?.expireWaiter(waiterID)

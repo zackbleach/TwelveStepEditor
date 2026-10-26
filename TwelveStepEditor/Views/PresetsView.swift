@@ -7,6 +7,7 @@ struct PresetsView: View {
     @Environment(AppModel.self) private var model
     @State private var search = ""
     @State private var importing = false
+    @State private var settingUpSync = false
     @State private var message: String?
     @State private var deleting: Preset?
     @State private var path: [String] = []
@@ -17,10 +18,13 @@ struct PresetsView: View {
             Group {
                 if let contents = store.contents {
                     let inSetlist = Set(contents.setlist.entries)
-                    let presets = contents.orderedPresets.filter {
+                    let presets = contents.listedPresets.filter {
                         search.isEmpty || $0.name.localizedCaseInsensitiveContains(search)
                     }
                     List {
+                        if store.source == .onDevice && search.isEmpty {
+                            MacSyncCard { settingUpSync = true }
+                        }
                         ForEach(presets, id: \.key) { preset in
                             NavigationLink(value: preset.key) {
                                 PresetRow(preset: preset, inSetlist: inSetlist.contains(preset.name))
@@ -62,6 +66,10 @@ struct PresetsView: View {
             }
             .refreshable { store.reload() }
             .onAppear {
+                #if DEBUG
+                // -syncWizard: open the Mac sync wizard (for screenshots).
+                if ProcessInfo.processInfo.arguments.contains("-syncWizard") { settingUpSync = true }
+                #endif
                 if let key = model.launchRoute.presetKey, path.isEmpty {
                     path = [key]
                     model.launchRoute.presetKey = nil
@@ -70,6 +78,7 @@ struct PresetsView: View {
             .fileImporter(isPresented: $importing, allowedContentTypes: [.twelveStepPreset, .json], allowsMultipleSelection: true) { result in
                 importFiles(result)
             }
+            .sheet(isPresented: $settingUpSync) { SyncWizard() }
             .confirmationDialog("Delete “\(deleting?.name ?? "")”?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                                 titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
@@ -113,9 +122,14 @@ struct PresetsView: View {
 private struct PresetRow: View {
     let preset: Preset
     let inSetlist: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: 12) {
+        // At accessibility text sizes the name gets the full width, with the display below it.
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+            : AnyLayout(HStackLayout(spacing: 12))
+        layout {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(preset.name)
@@ -126,7 +140,7 @@ private struct PresetRow: View {
                 }
                 Text(preset.voiceSummary).font(.caption).foregroundStyle(.secondary)
             }
-            Spacer()
+            if !typeSize.isAccessibilitySize { Spacer() }
             DisplayPreview(text: preset.displayName, font: .system(.caption, design: .monospaced).weight(.semibold))
         }
     }

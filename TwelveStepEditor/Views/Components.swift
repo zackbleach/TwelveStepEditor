@@ -2,6 +2,9 @@ import SwiftUI
 import TwelveStepKit
 import UIKit
 
+/// "iPhone" or "iPad", for text that names this device.
+@MainActor var deviceName: String { UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone" }
+
 extension ConnectionStatus {
     var color: Color {
         switch self {
@@ -21,10 +24,10 @@ extension ConnectionStatus {
         }
     }
 
-    var detail: String {
+    @MainActor var detail: String {
         switch self {
         case .transportUnavailable(let message): message
-        case .noDevice: "Connect the 12 Step to the iPhone's USB-C port."
+        case .noDevice: "Connect the 12 Step to the \(deviceName)'s USB-C port."
         case .detected(let name): "\(name) is present. Identifying… (or run an identity request under Diagnostic queries)."
         case .identified(let name, let reply): "\(name) · \(reply.summary)"
         }

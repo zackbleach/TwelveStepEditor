@@ -3,9 +3,19 @@ import Foundation
 /// Library and setlist operations with the desktop editor's semantics (`presetinterface.cpp`,
 /// `setlist.cpp`, `copypastehandler.cpp`, `importexporthandler.cpp`), so files edited on either
 /// side stay consistent.
+extension Preset {
+    /// The factory "init" preset (see `PresetFolderContents.listedPresets`).
+    public var isInitTemplate: Bool { name.caseInsensitiveCompare("init") == .orderedSame }
+}
+
 extension PresetFolderContents {
     /// Presets in library order (`Preset_000` …).
     public var orderedPresets: [Preset] { library.presetsInEditorOrder() }
+
+    /// Presets to list for editing: everything except the factory library's "init" entry, a
+    /// blank template the desktop ships as the last preset. It stays in the files (and in the
+    /// setlist, if a slot uses it); the app just doesn't offer it for editing or picking.
+    public var listedPresets: [Preset] { orderedPresets.filter { !$0.isInitTemplate } }
 
     /// The desktop's "Save As" naming: "Name", then "Name copy1", "Name copy2", …
     public func uniqueName(for proposed: String) -> String {

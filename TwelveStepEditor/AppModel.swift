@@ -83,7 +83,7 @@ final class AppModel {
     }
 
     var appVersion: String {
-        "12 Step Diagnostics \(shortVersion)"
+        "12 Step Editor (iOS) \(shortVersion)"
     }
 
     /// e.g. "0.1.1 (2)": marketing version and build number, shown on screen and in reports.

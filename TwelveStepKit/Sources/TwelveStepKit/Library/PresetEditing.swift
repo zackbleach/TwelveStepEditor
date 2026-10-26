@@ -215,10 +215,20 @@ public struct Modline: Equatable, Sendable {
 public enum NoteNames {
     static let names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
 
-    /// "C4" for 60 (middle C = C4, as in the Monitor).
+    /// "C3" for 60: middle C = C3, the desktop 12 Step Editor's convention (keyedit.cpp), also
+    /// used by Ableton and Yamaha. MIDI 0 is C-2.
     public static func name(_ note: Int) -> String {
-        "\(names[((note % 12) + 12) % 12])\(note / 12 - 1)"
+        "\(names[((note % 12) + 12) % 12])\(octave(of: note))"
     }
+
+    /// The octave number in names (60 → 3).
+    public static func octave(of note: Int) -> Int { Int((Double(note) / 12).rounded(.down)) - 2 }
+
+    /// The MIDI note of C in `octave` (3 → 60).
+    public static func c(inOctave octave: Int) -> Int { (octave + 2) * 12 }
+
+    /// Octaves whose C is a valid MIDI note (C-2 … C8).
+    public static let octaveRange = -2...8
 
     public static func pitchClass(_ note: Int) -> String {
         names[((note % 12) + 12) % 12]

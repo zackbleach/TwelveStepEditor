@@ -43,10 +43,10 @@ struct PresetEditingTests {
             let preset = presets.first { $0.name == name }!
             return (1...13).map { preset.notes(forKey: $0) }
         }
-        #expect(KeyPattern(octave: 3, layout: .chromatic, voicing: .single).notesForKeys() == keys("Chromatic"))
-        #expect(KeyPattern(octave: 3, layout: .chromatic, voicing: .fifths).notesForKeys() == keys("Fifths"))
+        #expect(KeyPattern(octave: 2, layout: .chromatic, voicing: .single).notesForKeys() == keys("Chromatic"))
+        #expect(KeyPattern(octave: 2, layout: .chromatic, voicing: .fifths).notesForKeys() == keys("Fifths"))
         // Keys stay chromatic: key 1 = C, key 3 = D, key 8 = G, key 13 = C an octave up.
-        let major = KeyPattern(octave: 4, layout: .major, voicing: .triads).notesForKeys()
+        let major = KeyPattern(octave: 3, layout: .major, voicing: .triads).notesForKeys()
         #expect(major[0] == [60, 64, 67])   // C
         #expect(major[1] == [])             // C♯: outside the scale, silent by default
         #expect(major[2] == [62, 65, 69])   // Dm
@@ -54,7 +54,7 @@ struct PresetEditingTests {
         #expect(major[12] == [72, 76, 79])  // C
         #expect(KeyPattern.parseIntervals("+7, +12 x") == [7, 12])
 
-        var pattern = KeyPattern(octave: 4, layout: .major, voicing: .triads, outOfScale: .nearest)
+        var pattern = KeyPattern(octave: 3, layout: .major, voicing: .triads, outOfScale: .nearest)
         #expect(pattern.notesForKeys()[1] == [60, 64, 67])          // C♯ → C (tie goes down)
         pattern.outOfScale = .leadingDiminished
         #expect(pattern.notesForKeys()[1] == [61, 64, 67, 70])      // C♯dim7 → Dm
@@ -66,7 +66,7 @@ struct PresetEditingTests {
         #expect(NoteNames.label(for: [64, 67, 72]) == "C/E")
 
         // Another key: key 1 stays C. F major 7ths → C7, (C♯ silent), Dm7, …, F on key 6.
-        let fMajor = KeyPattern(octave: 4, tonic: 5, layout: .major, voicing: .sevenths).notesForKeys()
+        let fMajor = KeyPattern(octave: 3, tonic: 5, layout: .major, voicing: .sevenths).notesForKeys()
         #expect(NoteNames.label(for: fMajor[0]) == "C7")
         #expect(fMajor[1] == [])
         #expect(NoteNames.label(for: fMajor[2]) == "Dm7")
@@ -76,18 +76,18 @@ struct PresetEditingTests {
         #expect(NoteNames.label(for: fMajor[12]) == "C7")
 
         // Nearest in a pentatonic scale picks the closer note, not always the one below.
-        let pentatonic = KeyPattern(octave: 4, layout: .majorPentatonic, voicing: .single, outOfScale: .nearest).notesForKeys()
+        let pentatonic = KeyPattern(octave: 3, layout: .majorPentatonic, voicing: .single, outOfScale: .nearest).notesForKeys()
         #expect(pentatonic[5] == [64])  // F → E (1 below) rather than G (2 above)
         #expect(pentatonic[6] == [67])  // F♯ → G (1 above) rather than E (2 below)
     }
 
     @Test func chordsAreNamed() {
-        #expect(NoteNames.label(for: [60]) == "C4")
+        #expect(NoteNames.label(for: [60]) == "C3")  // desktop convention: middle C = C3
         #expect(NoteNames.label(for: [60, 64, 67]) == "C")
         #expect(NoteNames.label(for: [62, 65, 69]) == "Dm")
         #expect(NoteNames.label(for: [48, 55]) == "C 5th")
-        #expect(NoteNames.label(for: [48, 60]) == "C3 oct")
-        #expect(NoteNames.label(for: [60, 61]) == "C4 C♯4")
+        #expect(NoteNames.label(for: [48, 60]) == "C2 oct")
+        #expect(NoteNames.label(for: [60, 61]) == "C3 C♯3")
         #expect(Chord.quickPicks.first { $0.name == "maj7" }?.notes(root: 60) == [60, 64, 67, 71])
         #expect(NoteNames.label(for: [60, 63, 66, 69]) == "Cdim7")
         #expect(NoteNames.label(for: [59, 62, 65, 69]) == "Bm7♭5")
@@ -140,6 +140,8 @@ struct PresetEditingTests {
         #expect(contents.setlist.entries.count == 21)
         contents.setlist.setEntries(["A", "B"])
         #expect(contents.setlist.slots[0...2] == ["A", "B", nil])
+        #expect(factory.listedPresets.count == 20)
+        #expect(!factory.listedPresets.contains { $0.name == "init" })
         #expect(!contents.setlist.hasGaps)
         contents.setlist.slots[5] = "C"
         #expect(contents.setlist.hasGaps)

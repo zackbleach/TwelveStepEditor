@@ -79,7 +79,7 @@ public struct KeyPattern: Equatable, Sendable {
         }
     }
 
-    /// Octave of key 1, which always plays a C (3 → C3 = 48, as in the factory presets).
+    /// Octave of key 1, which always plays a C (2 → C2 = 48, as in the factory presets; C3 = 60).
     public var octave: Int
     /// The scale's key as a pitch class (0 = C … 11 = B). Key 1 stays C whatever the key.
     public var tonic: Int
@@ -89,7 +89,7 @@ public struct KeyPattern: Equatable, Sendable {
     /// Semitones added above each key's note when the voicing is `.custom` (e.g. [7, 12]).
     public var customIntervals: [Int]
 
-    public init(octave: Int = 3, tonic: Int = 0, layout: Layout = .chromatic, voicing: Voicing = .single,
+    public init(octave: Int = 2, tonic: Int = 0, layout: Layout = .chromatic, voicing: Voicing = .single,
                 outOfScale: OutOfScale = .silent, customIntervals: [Int] = [7]) {
         self.octave = octave
         self.tonic = tonic
@@ -100,7 +100,7 @@ public struct KeyPattern: Equatable, Sendable {
     }
 
     /// MIDI note of key 1 (the C).
-    public var keyOneNote: Int { (octave + 1) * 12 }
+    public var keyOneNote: Int { NoteNames.c(inOctave: octave) }
     /// MIDI note of the tonic in key 1's octave; scale degrees are measured from here.
     private var root: Int { keyOneNote + tonic }
 

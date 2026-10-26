@@ -12,7 +12,7 @@ public final class PresetFolderStore {
 
         public var title: String {
             switch self {
-            case .onDevice: "On this iPhone"
+            case .onDevice: "On this device"
             case .folder(let url): url.lastPathComponent
             }
         }

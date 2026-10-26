@@ -61,7 +61,7 @@ struct IdentityReplyTests {
 
 struct ClassifierTests {
     @Test func classifiesPerformanceMessages() {
-        #expect(MessageClassifier.classify([0x90, 60, 100]).summary == "Note On ch1 C4 (60) vel 100")
+        #expect(MessageClassifier.classify([0x90, 60, 100]).summary == "Note On ch1 C3 (60) vel 100")
         #expect(MessageClassifier.classify([0x91, 60, 0]).summary.hasPrefix("Note Off ch2"))
         #expect(MessageClassifier.classify([0xB0, 7, 64]).kind == .performance)
         #expect(MessageClassifier.classify([0xC9, 0]).summary.contains("ch10 0"))

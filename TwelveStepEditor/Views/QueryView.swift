@@ -3,7 +3,6 @@ import TwelveStepKit
 
 struct QueryView: View {
     @Environment(AppModel.self) private var model
-    @State private var confirmingProbe: SafeCommand?
 
     var body: some View {
         let session = model.session
@@ -26,7 +25,7 @@ struct QueryView: View {
             }
 
             Section {
-                ForEach(SafeCommand.allCases.filter { !$0.isExperimental }) { command in
+                ForEach(SafeCommand.allCases) { command in
                     Button {
                         Task { await session.run(command) }
                     } label: {
@@ -44,28 +43,7 @@ struct QueryView: View {
                     if session.isQuerying { ProgressView().padding(.leading, 6) }
                 }
             } footer: {
-                Text("Read-only messages the official editor sends routinely. Apart from the experimental probe below, nothing else can be sent; that is enforced in code. Run the identity request first.")
-            }
-
-            Section {
-                ForEach(SafeCommand.allCases.filter(\.isExperimental)) { command in
-                    Button {
-                        confirmingProbe = command
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Label(command.title, systemImage: "exclamationmark.triangle.fill")
-                                .font(.headline)
-                                .foregroundStyle(.orange)
-                            Text(command.explanation).font(.caption).foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    .disabled(session.isQuerying || session.selectedDestinationID == nil)
-                }
-            } header: {
-                Text("Experimental probe")
-            } footer: {
-                Text("Not used by the official editor. Back up your presets in the desktop editor before sending. Send it once, then export the report from the Monitor tab.")
+                Text("Read-only messages the official editor sends routinely. Nothing else can be sent from here; that is enforced in code. Run the identity request first.")
             }
 
             if let result = session.lastResult {
@@ -73,17 +51,6 @@ struct QueryView: View {
             }
         }
         .navigationTitle("Query")
-        .confirmationDialog("Send experimental message?", isPresented: Binding(
-            get: { confirmingProbe != nil },
-            set: { if !$0 { confirmingProbe = nil } }
-        ), titleVisibility: .visible, presenting: confirmingProbe) { command in
-            Button("Send \(command.title)", role: .destructive) {
-                Task { await session.run(command) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: { _ in
-            Text("The official editor never sends this message, so its effect on the 12 Step is unknown. It might be ignored, answered, or do something unexpected. Only continue if your presets are backed up in the desktop editor.")
-        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { VersionBadge() }
         }

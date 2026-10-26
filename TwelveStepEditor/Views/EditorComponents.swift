@@ -24,6 +24,7 @@ struct DisplayPreview: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(.black, in: RoundedRectangle(cornerRadius: 5))
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .accessibilityLabel("Display \(text)")
     }
 }

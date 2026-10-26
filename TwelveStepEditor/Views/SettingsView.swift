@@ -6,6 +6,8 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var draft: GlobalSettings?
     @State private var choosingFolder = false
+    @State private var settingUpSync = false
+    @AppStorage("macSyncCardDismissed") private var syncCardDismissed = false
     @State private var confirmingRestore = false
     @State private var message: String?
     @State private var sending = false
@@ -33,13 +35,14 @@ struct SettingsView: View {
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { model.presets.useFolder(folder); draft = model.presets.contents?.settings }
             }
+            .sheet(isPresented: $settingUpSync, onDismiss: { draft = model.presets.contents?.settings }) { SyncWizard() }
             .confirmationDialog("Restore the factory presets?", isPresented: $confirmingRestore, titleVisibility: .visible) {
                 Button("Restore Factory Presets", role: .destructive) {
                     do { try model.presets.restoreFactoryPresets(); draft = model.presets.contents?.settings }
                     catch { message = error.localizedDescription }
                 }
             } message: {
-                Text("Replaces the presets, setlist and settings stored on this iPhone with the 12 Step Editor's factory set.")
+                Text("Replaces the presets, setlist and settings stored on this \(deviceName) with the 12 Step Editor's factory set.")
             }
             .messageAlert("Settings", message: $message)
         }
@@ -50,22 +53,29 @@ struct SettingsView: View {
     private var filesSection: some View {
         let store = model.presets
         return Section {
-            LabeledContent("Using", value: store.source.title)
+            LabeledContent("Using", value: store.source == .onDevice ? "On this \(deviceName)" : store.source.title)
             if let error = store.loadError {
                 Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
             }
             Button("Choose folder…") { choosingFolder = true }
             if store.source == .onDevice {
+                Button("Sync with Your Mac…") { settingUpSync = true }
+            }
+            if store.source == .onDevice {
                 Button("Restore factory presets…", role: .destructive) { confirmingRestore = true }
             } else {
-                Button("Use presets on this iPhone instead") { store.useOnDeviceFolder(); draft = store.contents?.settings }
+                Button("Use presets on this \(deviceName) instead") {
+                    store.useOnDeviceFolder()
+                    draft = store.contents?.settings
+                    syncCardDismissed = false // offer Mac sync again on the Presets tab
+                }
             }
             Button("Reload") { store.reload() }
         } header: {
             Text("Preset files")
         } footer: {
             Text(store.source == .onDevice
-                 ? "Presets are stored on this iPhone (Files › On My iPhone › 12 Step). To share them with the desktop 12 Step Editor, choose its folder in iCloud Drive."
+                 ? "Presets are stored on this \(deviceName) (Files › On My \(deviceName) › 12 Step). To share them with the desktop 12 Step Editor, use Sync with Your Mac (free)."
                  : "Shared with the desktop 12 Step Editor. Quit the desktop editor while editing here, or it may overwrite your changes.")
         }
     }

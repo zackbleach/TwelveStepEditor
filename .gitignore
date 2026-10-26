@@ -7,3 +7,5 @@ DerivedData/
 backups/
 Tools/golden-harness/.build/
 build/
+Tools/sync-setup/dist/
+Tools/sync-setup/.build/

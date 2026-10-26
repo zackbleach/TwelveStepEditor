@@ -239,23 +239,35 @@ struct KeySelection: Identifiable {
 
 private struct DisplayNameEditor: View {
     @Binding var characters: [Character]
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack {
-            Text("Display")
-            Spacer()
-            ForEach(0..<4, id: \.self) { index in
-                Menu {
-                    Picker("Character \(index + 1)", selection: binding(index)) {
-                        ForEach(Preset.displayCharacterSet, id: \.self) { character in
-                            Text(character == " " ? "Space" : String(character)).tag(character)
-                        }
-                    }
-                } label: {
-                    DisplayPreview(text: String(characters.indices.contains(index) ? characters[index] : " "))
-                }
-                .accessibilityLabel("Display character \(index + 1)")
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Display")
+                HStack { characterMenus }
             }
+        } else {
+            HStack {
+                Text("Display")
+                Spacer()
+                characterMenus
+            }
+        }
+    }
+
+    @ViewBuilder private var characterMenus: some View {
+        ForEach(0..<4, id: \.self) { index in
+            Menu {
+                Picker("Character \(index + 1)", selection: binding(index)) {
+                    ForEach(Preset.displayCharacterSet, id: \.self) { character in
+                        Text(character == " " ? "Space" : String(character)).tag(character)
+                    }
+                }
+            } label: {
+                DisplayPreview(text: String(characters.indices.contains(index) ? characters[index] : " "))
+            }
+            .accessibilityLabel("Display character \(index + 1)")
         }
     }
 

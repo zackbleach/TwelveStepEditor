@@ -103,9 +103,9 @@ public enum MessageClassifier {
 
     static let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
-    /// Note name using the convention middle C (60) = C4.
+    /// Note name using the desktop editor's convention, middle C (60) = C3.
     public static func noteName(_ note: UInt8) -> String {
-        "\(noteNames[Int(note) % 12])\(Int(note) / 12 - 1)"
+        "\(noteNames[Int(note) % 12])\(Int(note) / 12 - 2)"
     }
 
     static func describeChannelMessage(_ message: [UInt8]) -> String {

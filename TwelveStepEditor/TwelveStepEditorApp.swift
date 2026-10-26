@@ -2,7 +2,7 @@ import SwiftUI
 import TwelveStepKit
 
 @main
-struct TwelveStepDiagnosticsApp: App {
+struct TwelveStepEditorApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {

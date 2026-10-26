@@ -37,9 +37,9 @@ public enum KMICalibrationType {
     public static let resetCVCalToFactory: UInt8 = 6
 }
 
-/// The only messages the diagnostics build is allowed to transmit. All but one are read-only
-/// queries that the official desktop editor sends routinely (see PROTOCOL.md §3). The exception is
-/// `presetRequestProbe`, an experiment the user explicitly approved on 2026-10-24.
+/// The only queries the app is allowed to transmit: read-only messages that the official desktop
+/// editor sends routinely (see PROTOCOL.md §3). The one-off preset-request probe (2026-10-24,
+/// PROTOCOL.md §9) has been removed now its question is answered.
 public enum SafeCommand: String, CaseIterable, Identifiable, Sendable {
     /// Universal Identity Request, sent by the desktop editor every 5 s while connecting.
     case identityRequest
@@ -47,24 +47,14 @@ public enum SafeCommand: String, CaseIterable, Identifiable, Sendable {
     case cvCalibrationRequest
     /// Legacy 12 Step firmware query for pre-1.0.9 units named "12Step Port 1".
     case legacyFirmwareQuery
-    /// EXPERIMENTAL: `REQUEST_PRESET` (category 2, type 0) with no payload. The editor never
-    /// sends it, so firmware behaviour is unknown. Approved by the user for a one-off probe.
-    case presetRequestProbe
 
     public var id: String { rawValue }
-
-    /// Commands whose behaviour on the device has not been established from the source.
-    public var isExperimental: Bool { self == .presetRequestProbe }
-
-    /// How long to wait for a reply; nil uses the session default.
-    public var timeout: TimeInterval? { isExperimental ? 4 : nil }
 
     public var title: String {
         switch self {
         case .identityRequest: "Identity request"
         case .cvCalibrationRequest: "CV calibration request"
         case .legacyFirmwareQuery: "Legacy firmware query"
-        case .presetRequestProbe: "Preset request (experimental)"
         }
     }
 
@@ -76,8 +66,6 @@ public enum SafeCommand: String, CaseIterable, Identifiable, Sendable {
             "KMI packet (category 1, type 4). Reads CV calibration; expected to answer on 12 Step2 only. Exercises the CRC/7-bit decoder."
         case .legacyFirmwareQuery:
             "Old-style 12 Step firmware query used for pre-1.0.9 units. Fallback only."
-        case .presetRequestProbe:
-            "KMI packet (category 2, type 0) with no payload, built like the CV calibration request. Defined in the editor source but never sent by it, so the device may ignore it, reply, or behave unexpectedly."
         }
     }
 
@@ -89,8 +77,6 @@ public enum SafeCommand: String, CaseIterable, Identifiable, Sendable {
             TwelveStepMessages.cvCalibrationRequest
         case .legacyFirmwareQuery:
             TwelveStepMessages.legacyFirmwareQuery
-        case .presetRequestProbe:
-            TwelveStepMessages.presetRequestProbe
         }
     }
 
@@ -106,9 +92,6 @@ public enum SafeCommand: String, CaseIterable, Identifiable, Sendable {
             } ?? false
         case .legacyFirmwareQuery:
             LegacyFirmwareReply(message) != nil || IdentityReply(message) != nil
-        case .presetRequestProbe:
-            // Accept any well-formed preset-category packet so an unexpected reply type is still captured.
-            (try? KMIFraming.decode(message)).map { $0.category == KMICategory.preset } ?? false
         }
     }
 }
@@ -131,15 +114,6 @@ public enum TwelveStepMessages {
         KMIPacket(pid: TwelveStepPID.twelveStep2.rawValue,
                   category: KMICategory.calibration,
                   type: KMICalibrationType.requestCVCal)
-    )
-
-    /// `REQUEST_PRESET` framed exactly like `REQUEST_CV_CAL` (same encoder, PID 22, no payload).
-    /// The editor never sends this. Any payload format (e.g. a preset index) would be invented, so
-    /// none is added.
-    public static let presetRequestProbe: [UInt8] = KMIFraming.encode(
-        KMIPacket(pid: TwelveStepPID.twelveStep2.rawValue,
-                  category: KMICategory.preset,
-                  type: KMIPresetType.requestPreset)
     )
 
     // Messages below are known from the source so they can be recognised and refused.

@@ -37,7 +37,7 @@ struct SetlistView: View {
             }
             .sheet(item: $picking) { pick in
                 PresetPicker(title: pick.slot == nil ? "Add to setlist" : "Slot \(pick.slot! + 1)",
-                             presets: store.contents?.orderedPresets ?? []) { name in
+                             presets: store.contents?.listedPresets ?? []) { name in
                     save { contents in
                         var entries = contents.setlist.entries
                         if let slot = pick.slot, entries.indices.contains(slot) { entries[slot] = name } else { entries.append(name) }

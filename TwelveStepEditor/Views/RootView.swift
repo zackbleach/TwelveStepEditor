@@ -32,6 +32,7 @@ extension View {
             if shown {
                 Text("SIMULATED DEVICE — not real hardware")
                     .font(.caption.weight(.semibold))
+                    .dynamicTypeSize(...DynamicTypeSize.xLarge)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
                     .background(.orange)

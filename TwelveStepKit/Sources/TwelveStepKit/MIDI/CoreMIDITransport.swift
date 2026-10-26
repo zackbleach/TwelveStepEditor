@@ -40,7 +40,7 @@ public final class CoreMIDITransport: MIDITransport, @unchecked Sendable {
         if lock.withLock({ $0.started }) { return }
 
         var client = MIDIClientRef()
-        let clientStatus = MIDIClientCreateWithBlock("TwelveStepDiagnostics" as CFString, &client) { [weak self] notification in
+        let clientStatus = MIDIClientCreateWithBlock("12 Step Editor" as CFString, &client) { [weak self] notification in
             self?.handleNotification(notification)
         }
         guard clientStatus == noErr else { throw TransportError.clientCreationFailed(clientStatus) }

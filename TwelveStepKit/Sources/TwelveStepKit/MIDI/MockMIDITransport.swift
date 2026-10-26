@@ -10,8 +10,6 @@ public final class MockMIDITransport: MIDITransport, @unchecked Sendable {
     public struct Behavior: Sendable {
         public var answersIdentity = true
         public var answersCVCalibration = true
-        /// Real behaviour is unknown, so by default the simulated device ignores the probe.
-        public var presetProbeReply: [UInt8]? = nil
         public var replyDelay: Duration = .milliseconds(40)
         public var firmware: [UInt8] = [1, 0, 9]
         public var productID: TwelveStepPID = .twelveStep2
@@ -109,11 +107,6 @@ public final class MockMIDITransport: MIDITransport, @unchecked Sendable {
             // Real 12 Step2 replies use the single-block layout (observed on hardware 2026-10-24).
             return KMIFraming.encodeSingleBlock(pid: behavior.productID.rawValue,
                                                 packetType: UInt16(KMICategory.calibration) << 8 | UInt16(KMICalibrationType.cvCalPayload),
-                                                payload: payload)
-        }
-        if bytes == TwelveStepMessages.presetRequestProbe, let payload = behavior.presetProbeReply {
-            return KMIFraming.encodeSingleBlock(pid: behavior.productID.rawValue,
-                                                packetType: UInt16(KMICategory.preset) << 8 | UInt16(KMIPresetType.presetPayload),
                                                 payload: payload)
         }
         return nil

@@ -13,7 +13,9 @@ struct UploadPolicyTests {
     @Test func refusesEverythingElse() {
         let refused: [[UInt8]] = [
             TwelveStepMessages.enterBootloader, TwelveStepMessages.tetherOn, TwelveStepMessages.tetherOff,
-            TwelveStepMessages.standaloneOn, TwelveStepMessages.presetRequestProbe, TwelveStepMessages.identityRequest,
+            TwelveStepMessages.standaloneOn, TwelveStepMessages.identityRequest,
+            // REQUEST_PRESET (category 2, type 0), the retired probe.
+            KMIFraming.encode(KMIPacket(pid: 22, category: KMICategory.preset, type: KMIPresetType.requestPreset)),
             KMIFraming.encode(KMIPacket(pid: 22, category: 1, type: KMICalibrationType.resetCVCalToFactory)),
             // Right shape but wrong PID / padding / count.
             KMIFraming.encode(KMIPacket(pid: 22, packetType: 9, blocks: [[0, 0, 1, 0, 0, 1], Array(repeating: 0, count: 191)]), headerPadding: 10),
