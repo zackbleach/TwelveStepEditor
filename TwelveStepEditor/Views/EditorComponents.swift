@@ -67,3 +67,45 @@ extension Preset {
         }.joined(separator: "   ")
     }
 }
+
+// MARK: - Touch and hold for help
+
+extension View {
+    /// Touch and hold this view to show `text` in a small popover. VoiceOver reads it as a hint.
+    /// Attach it to a label, not to a control, so it never competes with the control's own gestures.
+    func holdForHelp(_ title: String, _ text: String) -> some View {
+        modifier(HoldForHelp(title: title, text: text))
+    }
+}
+
+private struct HoldForHelp: ViewModifier {
+    let title: String
+    let text: String
+    @State private var showing = false
+
+    func body(content: Content) -> some View {
+        content
+            .contentShape(Rectangle())
+            .onLongPressGesture(minimumDuration: 0.4) { showing = true }
+            .sensoryFeedback(.impact(weight: .light), trigger: showing) { _, new in new }
+            .popover(isPresented: $showing, arrowEdge: .bottom) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title).font(.headline)
+                    Text(text).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+                }
+                .padding()
+                .frame(idealWidth: 300, maxWidth: 320)
+                .presentationCompactAdaptation(.popover)
+            }
+            .accessibilityHint(text)
+            #if DEBUG
+            // -showHelp "<title>": open this help popover on launch (for screenshots).
+            .onAppear {
+                let arguments = ProcessInfo.processInfo.arguments
+                if let index = arguments.firstIndex(of: "-showHelp"), arguments.indices.contains(index + 1), arguments[index + 1] == title {
+                    Task { try? await Task.sleep(for: .seconds(1)); showing = true }
+                }
+            }
+            #endif
+    }
+}

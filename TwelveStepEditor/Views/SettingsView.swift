@@ -3,13 +3,12 @@ import TwelveStepKit
 
 /// Global settings (the desktop's Settings tab) and where the preset files live.
 ///
-/// Like the desktop editor, every change is saved straight away and, with Live updates on, sent to
-/// the 12 Step a moment after you stop moving the control (settings.cpp `slotValueChanged` →
+/// Like the desktop editor, every change is saved straight away and sent to the connected 12 Step
+/// a moment after you stop moving the control (settings.cpp `slotValueChanged` →
 /// `MainWindow::slotSendSettings`). Only the settings packet is sent; presets and setlist are not.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var draft: GlobalSettings?
-    @AppStorage("liveSettingsUpdates") private var liveUpdates = true
     @State private var saveTask: Task<Void, Never>?
     @State private var sendTask: Task<Void, Never>?
     @State private var liveStatus: LiveStatus = .idle
@@ -18,7 +17,6 @@ struct SettingsView: View {
     @AppStorage("macSyncCardDismissed") private var syncCardDismissed = false
     @State private var confirmingRestore = false
     @State private var message: String?
-    @State private var sending = false
 
     private var saved: GlobalSettings? { model.presets.contents?.settings }
     private var isDirty: Bool { draft != nil && draft != saved }
@@ -103,16 +101,19 @@ struct SettingsView: View {
     @ViewBuilder
     private func deviceSections(_ settings: Binding<GlobalSettings>) -> some View {
         Section {
-            SliderRow(title: "Global key sensitivity", value: settings.keySensitivitySlider, range: 1...500,
-                      label: { "\(Double($0) / 5, specifier: "%g")%" }, reset: 100)
+            SliderRow(title: "Key sensitivity", value: settings.keySensitivitySlider, range: 1...500,
+                      label: { "\(Double($0) / 5, specifier: "%g")%" }, reset: 100,
+                      help: "How loud a press plays. Higher means lighter presses reach full velocity.")
             SliderRow(title: "On threshold", value: Binding(get: { settings.wrappedValue.onThreshold }, set: { value in
                 settings.wrappedValue.onThreshold = value
                 if settings.wrappedValue.offThreshold >= value { settings.wrappedValue.offThreshold = max(10, value - 1) }
-            }), range: 15...64, label: { "\($0)" }, reset: nil)
+            }), range: 15...64, label: { "\($0)" }, reset: nil,
+                      help: "How firmly a key must be pressed before its note starts. Lower is more sensitive.")
             SliderRow(title: "Off threshold", value: Binding(get: { settings.wrappedValue.offThreshold }, set: { value in
                 settings.wrappedValue.offThreshold = value
                 if value >= settings.wrappedValue.onThreshold { settings.wrappedValue.onThreshold = min(64, value + 1) }
-            }), range: 10...64, label: { "\($0)" }, reset: nil)
+            }), range: 10...64, label: { "\($0)" }, reset: nil,
+                      help: "How far a key must be let go before its note stops. Always kept below the on threshold.")
             Button("Reset thresholds") {
                 settings.wrappedValue.onThreshold = 20
                 settings.wrappedValue.offThreshold = 15
@@ -120,72 +121,57 @@ struct SettingsView: View {
         } header: {
             Text("Keys")
         } footer: {
-            Text("Higher sensitivity makes lighter presses louder. A key turns on above the on threshold and off below the off threshold.")
+            Label("Touch and hold a setting's name to see what it does.", systemImage: "hand.tap")
         }
 
         Section("Select button") {
             SliderRow(title: "Hold time", value: settings.selectHoldTime, range: 1...127,
-                      label: { "\(Double($0) * 0.05, specifier: "%.2f") s" }, reset: 10)
+                      label: { "\(Double($0) * 0.05, specifier: "%.2f") s" }, reset: 10,
+                      help: "How long you hold the 12 Step's Select button before it counts as a hold rather than a tap.")
         }
 
         Section {
-            SliderRow(title: "Backlight brightness", value: settings.backlightBrightness, range: 0...29,
-                      label: { "\(Int(Double($0) / 29 * 100))%" }, reset: nil)
-            Toggle("Send full volume on preset change", isOn: settings.fullVolumeOnPresetChange)
-            Toggle("Velocity override (all notes 127)", isOn: settings.velocityOverride)
-            Picker("Program change preset control", selection: settings.programChangeChannel) {
-                ForEach(0..<16, id: \.self) { Text("Channel \($0 + 1)").tag($0) }
-                Text("Disabled").tag(16)
+            SliderRow(title: "Backlight", value: settings.backlightBrightness, range: 0...29,
+                      label: { "\(Int(Double($0) / 29 * 100))%" }, reset: nil,
+                      help: "Brightness of the key lights. 12 Step2 only; the original 12 Step is always at full brightness.")
+            HelpRow("Full volume on preset change",
+                    help: "When you switch presets, the 12 Step sends MIDI volume at maximum, so a level set by the previous preset doesn't carry over.") {
+                Toggle("", isOn: settings.fullVolumeOnPresetChange).labelsHidden()
+            }
+            HelpRow("Full velocity",
+                    help: "Every note plays at full velocity (127), however hard you press.") {
+                Toggle("", isOn: settings.velocityOverride).labelsHidden()
+            }
+            HelpRow("Change preset by MIDI",
+                    help: "Lets another device pick the 12 Step's preset: a program change received on this channel selects the preset with that number. Off ignores program changes.") {
+                Picker("", selection: settings.programChangeChannel) {
+                    ForEach(0..<16, id: \.self) { Text("Channel \($0 + 1)").tag($0) }
+                    Text("Off").tag(16)
+                }
+                .labelsHidden()
             }
         } header: {
             Text("Device")
         } footer: {
-            Text("Backlight brightness applies to the 12 Step2. Program change preset control lets incoming program changes on that channel select presets.")
-        }
-
-        Section {
-            Toggle(isOn: $liveUpdates) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Live updates")
-                    liveStatusText
-                }
-            }
-            if !liveUpdates {
-                Button {
-                    Task { await send() }
-                } label: {
-                    HStack {
-                        Label("Send settings to 12 Step", systemImage: "square.and.arrow.up")
-                        if sending { Spacer(); ProgressView() }
-                    }
-                }
-                .disabled(!model.canSend || sending)
-            }
-        } header: {
-            Text("12 Step")
-        } footer: {
-            Text(liveUpdates
-                 ? "Changes are saved and sent to the connected 12 Step as you make them, like the desktop editor. Only these global settings are sent; presets and the setlist are not."
-                 : "Changes are saved here only. Tap Send to update the 12 Step. Only these global settings are sent; presets and the setlist are not.")
+            liveStatusText
         }
     }
 
+    /// Settings are always sent live, like the desktop editor; this line shows what happened.
     @ViewBuilder private var liveStatusText: some View {
         switch liveStatus {
         case _ where model.session.selectedDestination == nil:
-            Text("12 Step not connected").font(.caption).foregroundStyle(.secondary)
+            Label("Changes are sent to the 12 Step as you make them. Not connected.", systemImage: "cable.connector.slash")
         case .idle:
-            Text(liveUpdates ? "Ready" : "Off").font(.caption).foregroundStyle(.secondary)
+            Label("Changes are sent to the 12 Step as you make them.", systemImage: "arrow.up.circle")
         case .sending:
-            Text("Sending…").font(.caption).foregroundStyle(.secondary)
+            Label("Sending to the 12 Step…", systemImage: "arrow.up.circle")
         case .sent:
-            Label("Sent to 12 Step", systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.green)
+            Label("Sent to the 12 Step.", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
         case .failed(let reason):
-            Label("Not sent: \(reason)", systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
+            Label("Not sent: \(reason)", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
         }
     }
-
-    // MARK: Actions
 
     enum LiveStatus: Equatable { case idle, sending, sent, failed(String) }
 
@@ -207,7 +193,7 @@ struct SettingsView: View {
             saveTask = nil
         }
 
-        guard liveUpdates, model.session.selectedDestination != nil else { return }
+        guard model.session.selectedDestination != nil else { return }
         sendTask?.cancel()
         sendTask = Task {
             // Same pause as the desktop: its 1 ms timer sends once 11 ticks pass with no change
@@ -225,18 +211,6 @@ struct SettingsView: View {
         }
     }
 
-    /// Manual send (live updates off): sends what's on screen, which may be a moment ahead of the file.
-    private func send() async {
-        guard let draft else { return }
-        sending = true
-        do {
-            try await model.sendSettingsWhenFree(draft)
-            message = "Sent the global settings to the 12 Step."
-        } catch {
-            message = "Not sent: \(error.localizedDescription)"
-        }
-        sending = false
-    }
 }
 
 private struct SliderRow: View {
@@ -245,11 +219,12 @@ private struct SliderRow: View {
     let range: ClosedRange<Int>
     let label: (Int) -> LocalizedStringKey
     let reset: Int?
+    let help: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(title)
+                Text(title).holdForHelp(title, help)
                 Spacer()
                 Text(label(value)).monospacedDigit().foregroundStyle(.secondary)
                 if let reset, value != reset {
@@ -258,6 +233,27 @@ private struct SliderRow: View {
             }
             Slider(value: Binding(get: { Double(value) }, set: { value = Int($0.rounded()) }),
                    in: Double(range.lowerBound)...Double(range.upperBound), step: 1)
+        }
+    }
+}
+
+/// A setting whose name explains itself on touch and hold, with its control on the trailing side.
+private struct HelpRow<Control: View>: View {
+    let title: String
+    let help: String
+    @ViewBuilder let control: Control
+
+    init(_ title: String, help: String, @ViewBuilder control: () -> Control) {
+        self.title = title
+        self.help = help
+        self.control = control()
+    }
+
+    var body: some View {
+        HStack {
+            Text(title).holdForHelp(title, help)
+            Spacer(minLength: 8)
+            control
         }
     }
 }
