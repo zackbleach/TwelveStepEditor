@@ -210,8 +210,9 @@ struct SettingsView: View {
         guard liveUpdates, model.session.selectedDestination != nil else { return }
         sendTask?.cancel()
         sendTask = Task {
-            // Wait for the control to settle (the desktop waits ~10 ms; a touch slider needs longer).
-            try? await Task.sleep(for: .milliseconds(150))
+            // Same pause as the desktop: its 1 ms timer sends once 11 ticks pass with no change
+            // (settings.cpp slotSaveSettingsTimeout).
+            try? await Task.sleep(for: .milliseconds(11))
             guard !Task.isCancelled else { return }
             liveStatus = .sending
             do {
