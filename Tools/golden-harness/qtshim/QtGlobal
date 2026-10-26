@@ -1,0 +1,9 @@
+// Minimal stand-in for Qt, just enough to compile the official editor's preset formatter and
+// SysEx encoder unmodified. Not part of the app.
+#ifndef QTSHIM_QTGLOBAL
+#define QTSHIM_QTGLOBAL
+#ifndef Q_OS_MAC
+#define Q_OS_MAC 1
+#endif
+#define Q_UNUSED(x) (void)(x)
+#endif

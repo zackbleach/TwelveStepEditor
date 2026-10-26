@@ -1,0 +1,137 @@
+import SwiftUI
+import TwelveStepKit
+
+struct DeviceView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        let session = model.session
+
+        List {
+            Section {
+                StatusCard(status: session.status)
+            }
+
+            Section {
+                NavigationLink { MonitorView() } label: { Label("MIDI monitor", systemImage: "waveform.path.ecg") }
+                NavigationLink { QueryView() } label: { Label("Diagnostic queries", systemImage: "arrow.left.arrow.right") }
+            }
+
+            Section {
+                if session.twelveStepMatches.isEmpty {
+                    Text("No endpoints with “12 Step” in their name.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(session.twelveStepMatches, id: \.endpoint) { match in
+                        NavigationLink(value: match.endpoint) {
+                            EndpointRow(endpoint: match.endpoint, role: match.role)
+                        }
+                    }
+                }
+            } header: {
+                Text("12 Step ports")
+            } footer: {
+                Text("Configuration traffic uses the Control Surface port. The Expander / TRS port is not used for configuration.")
+            }
+
+            Section("All MIDI sources (\(session.endpoints.sources.count))") {
+                ForEach(session.endpoints.sources) { endpoint in
+                    NavigationLink(value: endpoint) { EndpointRow(endpoint: endpoint) }
+                }
+            }
+
+            Section("All MIDI destinations (\(session.endpoints.destinations.count))") {
+                ForEach(session.endpoints.destinations) { endpoint in
+                    NavigationLink(value: endpoint) { EndpointRow(endpoint: endpoint) }
+                }
+            }
+
+            Section {
+                Toggle("Use simulated device", isOn: $model.useSimulator)
+            } header: {
+                Text("Developer")
+            } footer: {
+                Text("The simulator returns invented placeholder replies for UI testing. Nothing it shows is evidence of real 12 Step behaviour.")
+            }
+        }
+        .navigationTitle("Device")
+        .navigationDestination(for: EndpointInfo.self) { EndpointDetailView(endpoint: $0) }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) { VersionBadge() }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    session.refreshEndpoints()
+                } label: {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                }
+            }
+        }
+        .refreshable { session.refreshEndpoints() }
+    }
+}
+
+struct EndpointRow: View {
+    let endpoint: EndpointInfo
+    var role: TwelveStepPortRole? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Image(systemName: endpoint.direction == .source ? "arrow.down.circle" : "arrow.up.circle")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(endpoint.direction == .source ? "Source" : "Destination")
+                Text(endpoint.displayName).font(.body)
+                if endpoint.isOffline {
+                    Text("offline").font(.caption).foregroundStyle(.red)
+                }
+            }
+            Text(subtitle).font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private var subtitle: String {
+        var parts = [endpoint.direction == .source ? "Source (device → iPhone)" : "Destination (iPhone → device)"]
+        if let role { parts.append("role: \(role.rawValue)") }
+        if let manufacturer = endpoint.manufacturer { parts.append(manufacturer) }
+        return parts.joined(separator: " · ")
+    }
+}
+
+struct EndpointDetailView: View {
+    let endpoint: EndpointInfo
+
+    var body: some View {
+        List {
+            Section("Endpoint") {
+                LabeledContent("Display name", value: endpoint.displayName)
+                LabeledContent("Name", value: endpoint.name)
+                LabeledContent("Direction", value: endpoint.direction.rawValue)
+                LabeledContent("Unique ID", value: String(endpoint.id))
+                LabeledContent("Entity", value: endpoint.entityName ?? "—")
+                LabeledContent("Device", value: endpoint.deviceName ?? "—")
+                LabeledContent("Manufacturer", value: endpoint.manufacturer ?? "—")
+                LabeledContent("Model", value: endpoint.model ?? "—")
+                LabeledContent("Driver", value: endpoint.driverOwner ?? "—")
+                LabeledContent("Offline", value: endpoint.isOffline ? "Yes" : "No")
+                if let match = DeviceDiscovery.match(endpoint) {
+                    LabeledContent("12 Step role", value: match.role.rawValue)
+                }
+            }
+            Section("All Core MIDI properties") {
+                Text(endpoint.propertyDump.isEmpty ? "—" : endpoint.propertyDump)
+                    .font(.system(.caption2, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+        }
+        .navigationTitle(endpoint.displayName)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            Button {
+                UIPasteboard.general.string = endpoint.propertyDump
+            } label: {
+                Label("Copy properties", systemImage: "doc.on.doc")
+            }
+        }
+    }
+}

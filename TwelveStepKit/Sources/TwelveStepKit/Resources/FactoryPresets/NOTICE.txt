@@ -1,0 +1,4 @@
+These factory preset files are copied unmodified from the official 12 Step Editor:
+https://github.com/Muse-Kinetics/12-step-editor-qt6 (QT/presets/, commit f0a881c)
+Copyright (c) KMI Music, Inc. (Muse Kinetics). Licensed under the Mozilla Public License 2.0;
+see LICENSES/MPL-2.0.txt in this project or https://mozilla.org/MPL/2.0/.
