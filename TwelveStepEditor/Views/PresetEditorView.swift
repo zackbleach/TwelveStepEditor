@@ -63,11 +63,19 @@ struct PresetEditorView: View {
         let inSetlist = model.presets.contents?.setlist.entries.contains(original?.name ?? "") ?? false
         return Form {
             Section {
-                TextField("Name", text: preset.nameValue)
-                    .font(.headline)
+                LabeledContent("Name") {
+                    HStack(spacing: 6) {
+                        TextField("Preset name", text: preset.nameValue)
+                            .multilineTextAlignment(.trailing)
+                            .submitLabel(.done)
+                        Image(systemName: "pencil")
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                    }
+                }
                 DisplayNameEditor(characters: preset.displayCharacters)
             } footer: {
-                Text("The 4 characters appear on the 12 Step's display when the preset is selected.")
+                Text("Tap the name or the display letters to change them. The 4 letters appear on the 12 Step's display when the preset is selected.")
             }
 
             Section {
