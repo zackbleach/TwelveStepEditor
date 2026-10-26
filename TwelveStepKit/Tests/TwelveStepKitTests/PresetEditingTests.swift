@@ -122,6 +122,10 @@ struct PresetEditingTests {
         let new = contents.newPreset()
         #expect(contents.library[key: new]?.voice(.a).channel == 1)
         #expect(contents.library[key: new]?.name == "New Preset")
+        #expect(contents.library[key: new]?.displayName == "NEPR")      // W and spaces are skipped
+        let named = contents.newPreset(name: "Bass 2")
+        #expect(contents.library[key: named]?.displayName == "BASS")
+        #expect(Preset.suggestedDisplay(for: "x") == [" ", " ", " ", " "])
     }
 
     @Test func importExportRoundTrip() throws {

@@ -8,6 +8,8 @@ struct PresetsView: View {
     @State private var search = ""
     @State private var importing = false
     @State private var settingUpSync = false
+    @State private var namingNewPreset = false
+    @State private var newName = ""
     @State private var message: String?
     @State private var deleting: Preset?
     @State private var path: [String] = []
@@ -51,7 +53,7 @@ struct PresetsView: View {
                 ToolbarItem(placement: .topBarLeading) { VersionBadge() }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button { add { $0.newPreset() } } label: { Label("New preset", systemImage: "plus") }
+                        Button { newName = ""; namingNewPreset = true } label: { Label("New preset", systemImage: "plus") }
                         Button { importing = true } label: { Label("Import preset…", systemImage: "square.and.arrow.down") }
                         if let copied = PresetClipboard.shared.values {
                             Button { add { $0.appendPreset(values: copied, name: copied["preset_name"]?.stringValue ?? "Pasted") } } label: {
@@ -69,6 +71,7 @@ struct PresetsView: View {
                 #if DEBUG
                 // -syncWizard: open the Mac sync wizard (for screenshots).
                 if ProcessInfo.processInfo.arguments.contains("-syncWizard") { settingUpSync = true }
+                if ProcessInfo.processInfo.arguments.contains("-newPreset") { namingNewPreset = true }
                 #endif
                 if let key = model.launchRoute.presetKey, path.isEmpty {
                     path = [key]
@@ -79,6 +82,17 @@ struct PresetsView: View {
                 importFiles(result)
             }
             .sheet(isPresented: $settingUpSync) { SyncWizard() }
+            .alert("New Preset", isPresented: $namingNewPreset) {
+                TextField("Name", text: $newName)
+                    .textInputAutocapitalization(.words)
+                Button("Cancel", role: .cancel) {}
+                Button("Create") {
+                    let name = newName.trimmingCharacters(in: .whitespaces)
+                    add { $0.newPreset(name: $0.uniqueName(for: name.isEmpty ? "New Preset" : name)) }
+                }
+            } message: {
+                Text("The 12 Step's display name is suggested from it; you can change both later.")
+            }
             .confirmationDialog("Delete “\(deleting?.name ?? "")”?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
                                 titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {

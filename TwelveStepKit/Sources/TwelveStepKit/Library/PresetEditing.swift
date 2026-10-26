@@ -34,6 +34,14 @@ extension Preset {
     /// Characters the 12 Step's display can show (the desktop editor's display-name menu), plus space.
     public static let displayCharacterSet: [Character] = Array(" -_0123456789ABCDEFGHIJLNOPQRSTUYZ")
 
+    /// A 4-character display name suggested from a preset name: the first characters the display
+    /// can show, upper-cased (letters it can't show, such as K, M, V, W and X, are skipped).
+    public static func suggestedDisplay(for name: String) -> [Character] {
+        let allowed = Set(displayCharacterSet.filter { $0 != " " })
+        let usable = name.uppercased().filter { allowed.contains($0) }
+        return Array((Array(usable) + Array(repeating: " ", count: 4)).prefix(4))
+    }
+
     // MARK: Keys
 
     static func noteKey(key: Int, note: Int) -> String {

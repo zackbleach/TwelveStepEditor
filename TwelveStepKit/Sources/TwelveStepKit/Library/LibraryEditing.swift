@@ -53,8 +53,14 @@ extension PresetFolderContents {
 
     /// A new preset from `Blank.twelvesteppreset` (the desktop's Clear Preset values).
     @discardableResult
+    /// Appends a blank preset (unique name, display suggested from the name). Returns its key.
     public mutating func newPreset(name: String = "New Preset") -> String {
-        appendPreset(values: blankPreset.values, name: name)
+        let key = appendPreset(values: blankPreset.values, name: name)
+        if var preset = library[key: key] {
+            preset.displayCharacters = Preset.suggestedDisplay(for: preset.name)
+            library[key: key] = preset
+        }
+        return key
     }
 
     /// Deletes a preset, renumbers the library, and empties setlist slots that used it

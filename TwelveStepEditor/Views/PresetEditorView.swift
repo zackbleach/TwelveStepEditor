@@ -132,7 +132,7 @@ struct PresetEditorView: View {
                 Button("Cancel") { confirmingDiscard = true }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") { save() }
+                Button("Save") { if save() { dismiss() } }
             }
         } else {
             ToolbarItem(placement: .topBarTrailing) {
