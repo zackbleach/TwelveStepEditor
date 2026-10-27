@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- Keys Xcode's generated Info.plist can't set from build settings; merged with the generated one. -->
+<dict>
+	<!-- Shows the app's Documents folder ("12 Step Editor" presets) in Files › On My iPhone/iPad. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+</dict>
+</plist>
