@@ -31,7 +31,7 @@ extension ConnectionStatus {
         switch self {
         case .transportUnavailable(let message): message
         case .noDevice: "Connect the 12 Step to the \(deviceName)'s USB-C port."
-        case .detected(let name): "\(name) is present. Identifying… (or run an identity request under Diagnostic queries)."
+        case .detected(let name): "\(name) is present. Identifying… If this doesn't finish, unplug the 12 Step and plug it back in."
         case .identified(let name, let reply): "\(name) · \(reply.summary)"
         }
     }

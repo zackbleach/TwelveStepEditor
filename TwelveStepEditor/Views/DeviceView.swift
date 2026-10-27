@@ -18,7 +18,10 @@ struct DeviceView: View {
 
             Section {
                 NavigationLink { MonitorView() } label: { Label("MIDI monitor", systemImage: "waveform.path.ecg") }
+                #if DEBUG
+                // Developer tool (identity, CV calibration and legacy firmware queries); not in release builds.
                 NavigationLink { QueryView() } label: { Label("Diagnostic queries", systemImage: "arrow.left.arrow.right") }
+                #endif
                 NavigationLink { AboutView() } label: { Label("About", systemImage: "info.circle") }
             }
 
