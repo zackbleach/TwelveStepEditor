@@ -70,8 +70,12 @@ Requirements: Xcode 16 or later, and iOS 17 or later (USB-C iPhones ship with iO
 
 ## Licensing
 
-Some files are derived from the official editor and stay under MPL-2.0 (see their headers and `LICENSES/MPL-2.0.txt`):
-- `Protocol/KMIFraming.swift` and `Protocol/PresetImageFormatter.swift` (translations);
-- `Resources/FactoryPresets/` (copied unmodified, see `NOTICE.txt`).
+Source-available: free for noncommercial use, and commercial use needs permission. See [`LICENSE.md`](LICENSE.md).
+- **Most of the project:** [PolyForm Noncommercial 1.0.0](LICENSES/PolyForm-Noncommercial-1.0.0.md).
+- **Files derived from the official 12 Step Editor stay [MPL-2.0](LICENSES/MPL-2.0.txt):**
+  - `Protocol/KMIFraming.swift`
+  - `Protocol/PresetImageFormatter.swift`
+  - `Resources/FactoryPresets/`
+  - `Tools/golden-harness/`
 
-If you distribute the app, the source of these files must be made available. The rest of the project isn't derived from MPL files.
+Every source file's `SPDX-License-Identifier` header says which licence applies. By contributing, you agree that your contribution may be distributed under these terms and also licensed by the copyright holder under other terms, including commercially.

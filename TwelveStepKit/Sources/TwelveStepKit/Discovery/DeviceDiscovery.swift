@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 import Foundation
 
 /// Role of a 12 Step port, derived from the names in `KMI_DevData.h`.

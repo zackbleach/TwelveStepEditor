@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Copyright 2026 Zack Bleach. See LICENSE.md.
 # Moves the 12 Step Editor's working folder to iCloud Drive so the iOS app can share it.
 #
 # What it does (nothing inside the editor app is modified):

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Golden-byte harness: runs the official 12 Step Editor's own preset formatter (imageformatter.cpp)
 // and legacy SysEx encoder (sysex.cpp, download.c), unmodified, on a flattened preset folder and
 // prints the exact setlist and settings SysEx messages the desktop editor would send.

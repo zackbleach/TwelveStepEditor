@@ -1,4 +1,6 @@
 // swift-tools-version:5.10
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
 import PackageDescription
 
 // "12 Step Sync": a small Mac app that points the desktop 12 Step Editor at iCloud Drive (and

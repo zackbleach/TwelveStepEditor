@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 """Flattens a 12 Step Editor preset folder into the harness's tab-separated input."""
 import json, sys, os
 

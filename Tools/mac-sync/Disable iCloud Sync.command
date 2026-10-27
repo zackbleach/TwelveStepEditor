@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Copyright 2026 Zack Bleach. See LICENSE.md.
 # Points the 12 Step Editor back at its own folder, bringing the latest presets from iCloud Drive.
 #
 #   1. Checks the 12 Step Editor is not running.

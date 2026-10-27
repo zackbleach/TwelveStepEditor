@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 import Foundation
 
 /// Typed access to every preset field the desktop editor exposes, using the same JSON keys and

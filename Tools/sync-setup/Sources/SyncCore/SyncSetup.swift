@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 import Foundation
 
 /// Moves the desktop 12 Step Editor's working folder to iCloud Drive and back. Nothing inside the

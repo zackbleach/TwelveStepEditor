@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: MPL-2.0
 # Builds the golden harness from the official editor's sources (default: ../../../12step-reference).
 set -eu
 here="$(cd "$(dirname "$0")" && pwd)"

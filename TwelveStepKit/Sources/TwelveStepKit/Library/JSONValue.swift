@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 import Foundation
 
 /// A JSON value that round-trips the desktop editor's files without losing unknown keys.

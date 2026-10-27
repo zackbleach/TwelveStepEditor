@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Minimal stand-in for the Qt classes used by imageformatter.cpp / sysex.cpp. Behaviour mirrors
 // Qt where the formatter depends on it (QVariant conversions, QMap::value defaults, toLatin1).
 #ifndef QTSHIM_H

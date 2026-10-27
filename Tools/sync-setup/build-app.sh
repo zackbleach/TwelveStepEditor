@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Copyright 2026 Zack Bleach. See LICENSE.md.
 # Builds "12 Step Sync.app" into Tools/sync-setup/dist/.
 #
 #   ./build-app.sh                  ad-hoc signed (runs on this Mac)
@@ -38,6 +40,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSApplicationCategoryType</key><string>public.app-category.music</string>
     <key>NSHighResolutionCapable</key><true/>
+    <key>NSHumanReadableCopyright</key><string>© 2026 Zack Bleach. Free for noncommercial use (PolyForm Noncommercial 1.0.0).</string>
 </dict>
 </plist>
 PLIST

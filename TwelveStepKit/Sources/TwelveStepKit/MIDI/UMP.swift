@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 import Foundation
 
 /// Conversion between MIDI 1.0 byte-stream messages and Universal MIDI Packets (MIDI 1.0 protocol),

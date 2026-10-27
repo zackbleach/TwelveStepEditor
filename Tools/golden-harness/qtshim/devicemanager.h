@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
 #include "qtshim.h"

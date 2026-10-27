@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 import SwiftUI
 
 /// Version, affiliation, privacy and licensing. MPL-2.0 requires telling people where the source
@@ -7,7 +10,7 @@ struct AboutView: View {
 
     /// Public source repository. TODO.org tracks creating it; keep this in step with its URL.
     static let sourceURL = URL(string: "https://github.com/zackbleach/TwelveStepEditor")!
-    static let licenseURL = URL(string: "https://mozilla.org/MPL/2.0/")!
+    static let licenseURL = URL(string: "https://github.com/zackbleach/TwelveStepEditor/blob/main/LICENSE.md")!
     static let desktopEditorURL = URL(string: "https://github.com/Muse-Kinetics/12-step-editor-qt6")!
 
     var body: some View {
@@ -15,7 +18,7 @@ struct AboutView: View {
             Section {
                 LabeledContent("Version", value: model.shortVersion)
             } footer: {
-                Text("An independent editor for the 12 Step foot controller. Not made or endorsed by Muse Kinetics (Keith McMillen Instruments). 12 Step is their trademark.")
+                Text("An independent editor for the 12 Step foot controller, not made by Muse Kinetics (Keith McMillen Instruments). 12 Step is their trademark, used with permission.")
             }
 
             Section("Privacy") {
@@ -24,12 +27,12 @@ struct AboutView: View {
 
             Section {
                 Link(destination: Self.sourceURL) { Label("Source code", systemImage: "chevron.left.forwardslash.chevron.right") }
-                Link(destination: Self.licenseURL) { Label("Mozilla Public License 2.0", systemImage: "doc.text") }
+                Link(destination: Self.licenseURL) { Label("Licence", systemImage: "doc.text") }
                 Link(destination: Self.desktopEditorURL) { Label("Official 12 Step Editor source", systemImage: "arrow.up.forward.square") }
             } header: {
-                Text("Open source")
+                Text("Source code")
             } footer: {
-                Text("The SysEx framing, the preset upload format and the factory presets are derived from Muse Kinetics' 12 Step Editor, used under the Mozilla Public License 2.0. The source code of this app is available at the link above.")
+                Text("The source is free for noncommercial use (PolyForm Noncommercial 1.0.0). The SysEx framing, preset upload format and factory presets come from Muse Kinetics' 12 Step Editor and remain under the Mozilla Public License 2.0.")
             }
         }
         .navigationTitle("About")

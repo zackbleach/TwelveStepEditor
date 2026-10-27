@@ -1,4 +1,6 @@
 // swift-tools-version:5.10
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
 import PackageDescription
 
 let package = Package(

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Copyright 2026 Zack Bleach. See LICENSE.md.
+
 // Command-line probe for macOS: lists MIDI endpoints and runs the same allow-listed read-only
 // queries as the iOS diagnostics app, to separate iOS issues from device/protocol issues.
 //
