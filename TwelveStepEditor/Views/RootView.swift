@@ -32,7 +32,7 @@ extension View {
     /// An orange strip above the tab bar while the simulated device is in use.
     func simulatedBanner(_ shown: Bool) -> some View {
         safeAreaInset(edge: .bottom, spacing: 0) {
-            if shown {
+            if shown && !isScreenshotMode {
                 Text("SIMULATED DEVICE — not real hardware")
                     .font(.caption.weight(.semibold))
                     .dynamicTypeSize(...DynamicTypeSize.xLarge)

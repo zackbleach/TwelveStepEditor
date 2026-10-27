@@ -1,77 +1,88 @@
-# 12 Step iOS Editor
+# 12 Step Editor for iOS
 
-A native iOS editor for the Muse Kinetics **12 Step** MIDI foot controller, over USB-C.
+An iPhone and iPad editor for the **12 Step** MIDI foot controller by Muse Kinetics (Keith McMillen Instruments). Plug the 12 Step into your phone over USB-C, edit presets, chords and the setlist, and send them to the pedal. You don't need a computer.
 
-**Current state: preparing the first release (0.6.0).** It covers everything the desktop 12 Step Editor does to presets, the setlist and global settings, with a redesigned way to assign notes to keys. Setlist and settings are sent to the 12 Step over USB-C, byte-identical to the desktop editor. Firmware update and the calibration windows aren't included.
+<p>
+  <img src="docs/images/1-presets.png" width="180" alt="Preset list with each preset's 4-character display name">
+  <img src="docs/images/2-editor.png" width="180" alt="Preset editor showing the 13 keys laid out like the 12 Step, with chord names">
+  <img src="docs/images/3-key.png" width="180" alt="Key editor with a mini piano and chord buttons">
+  <img src="docs/images/4-fill.png" width="180" alt="Fill all keys: F major 7th chords across the keys">
+  <img src="docs/images/5-setlist.png" width="180" alt="Setlist with Send to 12 Step">
+</p>
+
+> **Status:** preparing the first App Store release. Everything below works and has been tested on a real 12 Step2 (firmware 1.0.9) with an iPhone 16 Pro.
+
+## What it does
+
+- **Covers everything the desktop 12 Step Editor does to presets, the setlist and global settings**, using the same files, so presets move freely between the two.
+- **Easier note assignment.** You see the 13 keys as they sit on the pedal, each showing its chord name.
+  - Tap a key to pick notes on a small piano or choose a chord: major, minor, dominant (including 7♯9 and altered), suspended, diminished and augmented.
+  - **Fill all keys** builds a whole preset at once from a scale and key, for example "F major, 7th chords". You choose what the keys outside the scale do.
+- **Sends to the 12 Step over USB-C.** Setlist and settings uploads are byte-for-byte identical to the desktop editor's. Settings changes take effect on the pedal as you make them, as they do on the desktop.
+- **Shares presets with the desktop editor on a Mac** through iCloud Drive, optionally. The free **12 Step Sync** Mac app (in this repo) sets that up in one click.
+- **Touch and hold** any setting's name for an explanation, written from the official manual.
+- **Demo mode** (Device tab) lets you try the app without a 12 Step.
+
+**Not included:** firmware updates, and the pedal and CV calibration tools. Use the desktop editor for those.
+
+## Compatibility
+
+| | Tested | Expected to work |
+|---|---|---|
+| Controller | 12 Step2, firmware 1.0.9 | Original 12 Step (untested) |
+| Device | iPhone 16 Pro, iOS 26 | Any iPhone or iPad with USB-C, iOS 17 or later |
+
+The 12 Step is class-compliant USB MIDI, so the app uses Core MIDI and needs no drivers.
+
+## Is it safe for my pedal?
+
+The app only ever sends the same messages the official desktop editor sends: read-only queries, setlist uploads and settings uploads. A setlist upload replaces the presets on the 12 Step, exactly as the desktop's "Send Setlist" does. The app asks before doing it. It never sends firmware or bootloader commands, and a safety check in code refuses anything that isn't on that list.
 
 ## Sharing presets with the desktop editor (optional)
 
-The phone app works on its own, starting from the factory presets. To edit the same presets on a Mac and the phone:
+1. On your Mac, build and open **12 Step Sync**: `Tools/sync-setup/build-app.sh` makes `Tools/sync-setup/dist/12 Step Sync.app`. Click **Turn On iCloud Sync**. It:
+   - backs up the desktop editor's presets;
+   - copies them to `iCloud Drive/12 Step Editor`;
+   - points the desktop editor at that folder.
 
-1. Build and open **12 Step Sync** (`Tools/sync-setup/build-app.sh` makes `Tools/sync-setup/dist/12 Step Sync.app`).
-   - It checks that the desktop editor is closed and iCloud Drive is on.
-   - It backs up the editor's folder to `~/Documents/12 Step Editor Backups/`.
-   - It copies the four preset files to `iCloud Drive/12 Step Editor/`.
-   - It points the editor's `PRESET_DIR` preference there.
-   - **Turn Off Sync** reverses it, bringing the latest presets back to the Mac.
-   - The desktop editor app itself is never modified.
-2. In the iOS app: **Settings › Choose folder… › iCloud Drive › 12 Step Editor**.
+   It never modifies the desktop editor app itself, and **Turn Off Sync** undoes it.
+2. In the iOS app, tap **Set Up Sync** on the Presets tab (or **Settings › Sync with Your Mac…**), then pick **iCloud Drive › 12 Step Editor**.
 
-The older Terminal scripts in `Tools/mac-sync/` do the same steps.
+Quit the desktop editor while editing on the phone, because it doesn't notice outside changes. If the desktop editor ever says a file is missing, choose **Exit Application**, never **Factory Default**.
 
-**Rules:**
-- Quit the desktop editor while editing on the phone. It doesn't notice outside changes and would overwrite them when it saves. The app refuses to save over a file that changed since it was loaded.
-- If the desktop editor says a file is missing, choose **Exit Application**, never **Factory Default**. Factory Default deletes the whole folder, and with sync, on every device.
+## Building
 
-This doesn't need a paid Apple developer account. The app uses the Files picker, not its own iCloud container.
+Requirements: Xcode 16 or later. The app targets iOS 17.
 
-## Layout
+- **App:** open `TwelveStepEditor.xcodeproj`, choose your team under Signing & Capabilities, pick a device, then press ⌘R. Without a 12 Step, turn on **Demo mode** on the Device tab.
+- **Tests:** `cd TwelveStepKit && swift test` (protocol, file format and editing logic, including golden upload bytes from the official editor).
+- **12 Step Sync (Mac):** `cd Tools/sync-setup && swift test && ./build-app.sh`
 
 ```
-TwelveStepEditor/
-├── TwelveStepEditor.xcodeproj   iOS app project (Xcode 16+)
-├── TwelveStepEditor/            SwiftUI app: App entry, AppModel, Views/, Assets
-├── TwelveStepKit/                    Swift package, no UI
-│   ├── Sources/TwelveStepKit/
-│   │   ├── MIDI/         MIDITransport protocol, CoreMIDITransport, MockMIDITransport, UMP codec
-│   │   ├── Protocol/     KMI framing + CRC (MPL-2.0), 12 Step messages, safety allow-list, classifier
-│   │   ├── Discovery/    12 Step endpoint matching
-│   │   ├── Logging/      DiagnosticLog
-│   │   └── Services/     DiagnosticsSession (queries, timeouts, status, report)
-│   ├── Sources/twelvestep-probe/   macOS CLI using the same code (hardware baseline)
-│   └── Tests/            Swift Testing suite (golden vectors from the official editor)
-├── Tools/
-│   ├── golden-harness/   builds the official C++ formatter to produce golden upload bytes
-│   ├── sync-setup/       "12 Step Sync" Mac app: turns iCloud sharing on/off for the desktop editor
-│   └── mac-sync/         the same as Terminal scripts (older)
-├── PRIVACY.md    privacy policy (the app collects no data)
-├── LICENSE.md    licence overview
-└── LICENSES/     PolyForm Noncommercial 1.0.0 and MPL-2.0 texts
+TwelveStepEditor/            SwiftUI app (Presets, Setlist, Settings, Device)
+TwelveStepKit/               Swift package with no UI: MIDI transport, 12 Step protocol, preset files
+Tools/sync-setup/            12 Step Sync, the Mac app for iCloud sharing
+Tools/golden-harness/        builds the official editor's formatter to produce reference upload bytes
+Tools/mac-sync/              older Terminal-script version of 12 Step Sync
 ```
 
-The official editor's source is at https://github.com/Muse-Kinetics/12-step-editor-qt6. The official user manual (help texts are based on v3.0.1) is at https://files.musekinetics.com/pub/products/12Step/editor/Manual/.
+## Acknowledgements
 
-## Build
+- Muse Kinetics publishes the source of the [official 12 Step Editor](https://github.com/Muse-Kinetics/12-step-editor-qt6) under MPL-2.0. This app's protocol and upload code is translated from it, and the factory presets come from it.
+- The [12 Step manual](https://files.musekinetics.com/pub/products/12Step/editor/Manual/) is the source for the in-app help.
 
-- **iOS app:** open `TwelveStepEditor.xcodeproj`, choose your Team under Signing & Capabilities, select your iPhone, then ⌘R.
-- **Command-line check:**
-  ```sh
-  xcodebuild -project TwelveStepEditor.xcodeproj -scheme TwelveStepEditor \
-    -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
-  ```
-- **Tests (macOS host):** `cd TwelveStepKit && swift test`
-- **Demo mode (simulated device):** use the "Demo mode" switch on the Device tab, or the `-simulate` launch argument. Simulated replies are invented placeholders.
+## Licence
 
-Requirements: Xcode 16 or later, and iOS 17 or later (USB-C iPhones ship with iOS 17+).
-
-## Licensing
-
-Source-available: free for noncommercial use, and commercial use needs permission. See [`LICENSE.md`](LICENSE.md).
+Source-available: **free for noncommercial use**, and commercial use needs permission.
 - **Most of the project:** [PolyForm Noncommercial 1.0.0](LICENSES/PolyForm-Noncommercial-1.0.0.md).
-- **Files derived from the official 12 Step Editor stay [MPL-2.0](LICENSES/MPL-2.0.txt):**
+- **Stays [MPL-2.0](LICENSES/MPL-2.0.txt):** the files derived from the official editor.
   - `Protocol/KMIFraming.swift`
   - `Protocol/PresetImageFormatter.swift`
   - `Resources/FactoryPresets/`
   - `Tools/golden-harness/`
 
-Every source file's `SPDX-License-Identifier` header says which licence applies. By contributing, you agree that your contribution may be distributed under these terms and also licensed by the copyright holder under other terms, including commercially.
+Each source file's header says which licence applies. See [`LICENSE.md`](LICENSE.md) for details, including the terms for contributions.
+
+The app collects no data; see [`PRIVACY.md`](PRIVACY.md).
+
+12 Step is a trademark of Muse Kinetics (Keith McMillen Instruments), used with permission. This is an independent project, not made by Muse Kinetics.
