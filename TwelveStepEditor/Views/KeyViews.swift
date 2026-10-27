@@ -371,8 +371,15 @@ struct FillKeysSheet: View {
                 }
                 if pattern.layout != .chromatic {
                     Section {
-                        Picker("Keys outside the scale", selection: $pattern.outOfScale) {
-                            ForEach(KeyPattern.OutOfScale.allCases) { Text($0.rawValue).tag($0) }
+                        // The value gets its full width ("Secondary dominant"); the label wraps if it must.
+                        HStack {
+                            Text("Outside the scale")
+                            Spacer(minLength: 8)
+                            Picker("Outside the scale", selection: $pattern.outOfScale) {
+                                ForEach(KeyPattern.OutOfScale.allCases) { Text($0.rawValue).tag($0) }
+                            }
+                            .labelsHidden()
+                            .fixedSize()
                         }
                     } footer: {
                         let outside = (0..<Preset.keyCount).filter { pattern.isOutOfScale(keyIndex: $0) }.map { String($0 + 1) }
