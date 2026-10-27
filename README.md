@@ -27,12 +27,14 @@ An iPhone and iPad editor for the **12 Step** MIDI foot controller by Muse Kinet
 
 ## Compatibility
 
-| | Tested | Expected to work |
+| | Supported (tested) | Expected to work |
 |---|---|---|
-| Controller | 12 Step2, firmware 1.0.9 | Original 12 Step (untested) |
+| Controller | 12 Step2, firmware 1.0.9 | — |
 | Device | iPhone 16 Pro, iOS 26 | Any iPhone or iPad with USB-C, iOS 17 or later |
 
 The 12 Step is class-compliant USB MIDI, so the app uses Core MIDI and needs no drivers.
+
+**The original 12 Step isn't officially supported**, because it hasn't been tested. The app includes the original's messages from the desktop editor, so it may well work. If you try it with an original 12 Step, please [open an issue](https://github.com/zackbleach/TwelveStepEditor/issues) saying what worked and what didn't. Reports are very welcome.
 
 ## Is it safe for my pedal?
 
