@@ -9,3 +9,5 @@ Tools/golden-harness/.build/
 build/
 Tools/sync-setup/dist/
 Tools/sync-setup/.build/
+# Private working notes (their own local git repo)
+internal/

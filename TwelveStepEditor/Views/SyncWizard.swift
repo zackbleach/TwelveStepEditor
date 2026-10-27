@@ -16,7 +16,7 @@ struct SyncWizard: View {
     @State private var choosingFolder = false
     @State private var problem: String?
 
-    /// Where 12 Step Sync is downloaded from (GitHub releases). TODO.org tracks publishing it.
+    /// Where 12 Step Sync is downloaded from (GitHub releases).
     static let downloadURL = URL(string: "https://github.com/zackbleach/TwelveStepEditor/releases/latest")!
 
     enum Page: Int, CaseIterable { case mac, connect, done }

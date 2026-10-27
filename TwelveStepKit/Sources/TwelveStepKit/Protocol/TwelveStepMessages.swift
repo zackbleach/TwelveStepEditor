@@ -41,8 +41,8 @@ public enum KMICalibrationType {
 }
 
 /// The only queries the app is allowed to transmit: read-only messages that the official desktop
-/// editor sends routinely (see PROTOCOL.md §3). The one-off preset-request probe (2026-10-24,
-/// PROTOCOL.md §9) has been removed now its question is answered.
+/// editor sends routinely. A one-off preset-request probe (2026-10-24) showed the device has no
+/// preset read-back and has been removed.
 public enum SafeCommand: String, CaseIterable, Identifiable, Sendable {
     /// Universal Identity Request, sent by the desktop editor every 5 s while connecting.
     case identityRequest

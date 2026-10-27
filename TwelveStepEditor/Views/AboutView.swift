@@ -8,7 +8,7 @@ import SwiftUI
 struct AboutView: View {
     @Environment(AppModel.self) private var model
 
-    /// Public source repository. TODO.org tracks creating it; keep this in step with its URL.
+    /// Public source repository.
     static let sourceURL = URL(string: "https://github.com/zackbleach/TwelveStepEditor")!
     static let licenseURL = URL(string: "https://github.com/zackbleach/TwelveStepEditor/blob/main/LICENSE.md")!
     static let desktopEditorURL = URL(string: "https://github.com/Muse-Kinetics/12-step-editor-qt6")!

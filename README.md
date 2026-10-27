@@ -2,7 +2,7 @@
 
 A native iOS editor for the Muse Kinetics **12 Step** MIDI foot controller, over USB-C.
 
-**Current state: preparing the first release (0.6.0).** The release checklist is `TODO.org`. It covers everything the desktop 12 Step Editor does to presets, the setlist and global settings, with a redesigned way to assign notes to keys (see `DESIGN.md`). Setlist and settings are sent to the 12 Step over USB-C, byte-identical to the desktop editor. Firmware update and the calibration windows aren't included.
+**Current state: preparing the first release (0.6.0).** It covers everything the desktop 12 Step Editor does to presets, the setlist and global settings, with a redesigned way to assign notes to keys. Setlist and settings are sent to the 12 Step over USB-C, byte-identical to the desktop editor. Firmware update and the calibration windows aren't included.
 
 ## Sharing presets with the desktop editor (optional)
 
@@ -44,20 +44,16 @@ TwelveStepEditor/
 │   ├── golden-harness/   builds the official C++ formatter to produce golden upload bytes
 │   ├── sync-setup/       "12 Step Sync" Mac app: turns iCloud sharing on/off for the desktop editor
 │   └── mac-sync/         the same as Terminal scripts (older)
-├── PROTOCOL.md   protocol findings with source references
-├── FEASIBILITY.md
-├── TESTING.md    install + physical test instructions
-├── PROGRESS.md   phase status and session log
-├── TODO.org      release checklist and backlog (org-mode)
 ├── PRIVACY.md    privacy policy (the app collects no data)
-└── LICENSES/MPL-2.0.txt
+├── LICENSE.md    licence overview
+└── LICENSES/     PolyForm Noncommercial 1.0.0 and MPL-2.0 texts
 ```
 
-The official editor source used as the reference is cloned at `../12step-reference`. The official user manual (help texts are based on v3.0.1) is at https://files.musekinetics.com/pub/products/12Step/editor/Manual/.
+The official editor's source is at https://github.com/Muse-Kinetics/12-step-editor-qt6. The official user manual (help texts are based on v3.0.1) is at https://files.musekinetics.com/pub/products/12Step/editor/Manual/.
 
 ## Build
 
-- **iOS app:** open `TwelveStepEditor.xcodeproj`, choose your Team under Signing & Capabilities, select your iPhone, then ⌘R. See `TESTING.md` for the full steps.
+- **iOS app:** open `TwelveStepEditor.xcodeproj`, choose your Team under Signing & Capabilities, select your iPhone, then ⌘R.
 - **Command-line check:**
   ```sh
   xcodebuild -project TwelveStepEditor.xcodeproj -scheme TwelveStepEditor \
