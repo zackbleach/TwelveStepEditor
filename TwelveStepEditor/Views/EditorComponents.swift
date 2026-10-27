@@ -135,3 +135,17 @@ private struct HoldForHelp: ViewModifier {
             #endif
     }
 }
+
+// MARK: - Sheet size on iPad
+
+extension View {
+    /// On iPad, presents the sheet at the larger "page" size (iOS 18+) instead of the small centred
+    /// form, so the key layout and preview fit without scrolling. No effect on iPhone.
+    @ViewBuilder func largeSheetOnPad() -> some View {
+        if #available(iOS 18.0, *) {
+            presentationSizing(.page)
+        } else {
+            self
+        }
+    }
+}

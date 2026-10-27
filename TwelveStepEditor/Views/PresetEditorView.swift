@@ -41,12 +41,12 @@ struct PresetEditorView: View {
         }
         .sheet(item: $editingKey) { selection in
             if let binding = Binding($draft) {
-                KeyEditorSheet(preset: binding, key: selection.key)
+                KeyEditorSheet(preset: binding, key: selection.key).largeSheetOnPad()
             }
         }
         .sheet(isPresented: $fillingKeys) {
             if let binding = Binding($draft) {
-                FillKeysSheet(preset: binding)
+                FillKeysSheet(preset: binding).largeSheetOnPad()
             }
         }
         .confirmationDialog("Discard unsaved changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
