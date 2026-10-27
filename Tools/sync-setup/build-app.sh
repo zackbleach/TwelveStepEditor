@@ -10,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 APP="dist/12 Step Sync.app"
-VERSION="1.0"
+VERSION="${VERSION:-1.0}"
 
 swift build -c release --arch arm64 --arch x86_64
 BIN="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/SyncSetup"
