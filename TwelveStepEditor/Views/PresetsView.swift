@@ -53,7 +53,6 @@ struct PresetsView: View {
             .navigationTitle("Presets")
             .navigationDestination(for: String.self) { PresetEditorView(presetKey: $0) }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { VersionBadge() }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button { newName = ""; namingNewPreset = true } label: { Label("New preset", systemImage: "plus") }

@@ -5,7 +5,7 @@ import SwiftUI
 import TwelveStepKit
 import UIKit
 
-/// `-screenshotMode YES` (argument domain): hides the demo banner and the debug version label, for
+/// `-screenshotMode YES` (argument domain): hides the demo-mode indicator, for
 /// App Store and README screenshots taken in demo mode.
 var isScreenshotMode: Bool { UserDefaults.standard.bool(forKey: "screenshotMode") }
 
@@ -112,19 +112,3 @@ struct ShareableFile: Identifiable {
     var id: URL { url }
 }
 
-/// Small "v0.1.1 (2)" label so testers can confirm which build is installed.
-struct VersionBadge: View {
-    @Environment(AppModel.self) private var model
-
-    /// Debug builds only, to tell test installs apart; release builds show the version under About.
-    var body: some View {
-        #if DEBUG
-        if !isScreenshotMode {
-            Text("v\(model.shortVersion)")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("App version \(model.shortVersion)")
-        }
-        #endif
-    }
-}

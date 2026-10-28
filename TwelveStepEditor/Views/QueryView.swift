@@ -55,7 +55,6 @@ struct QueryView: View {
         }
         .navigationTitle("Query")
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { VersionBadge() }
         }
     }
 

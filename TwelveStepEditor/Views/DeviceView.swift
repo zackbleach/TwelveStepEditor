@@ -59,13 +59,16 @@ struct DeviceView: View {
             } header: {
                 Text("Demo")
             } footer: {
-                Text("Try the app without a 12 Step. The simulated device accepts sends and answers queries with invented placeholder replies; nothing it shows is real 12 Step behaviour.")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Try the app without a 12 Step. The simulated device accepts sends and answers queries with invented placeholder replies; nothing it shows is real 12 Step behaviour.")
+                    Text("12 Step Editor \(model.shortVersion)")
+                        .accessibilityLabel("App version \(model.shortVersion)")
+                }
             }
         }
         .navigationTitle("Device")
         .navigationDestination(for: EndpointInfo.self) { EndpointDetailView(endpoint: $0) }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { VersionBadge() }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     session.refreshEndpoints()
